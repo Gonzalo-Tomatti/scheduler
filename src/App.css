@@ -1,38 +1,81 @@
-.App {
-  text-align: center;
+@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:400|Playfair+Display:400");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+body,
+.btn,
+p {
+  font-family: "Source Sans Pro", sans-serif;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Playfair Display", serif;
 }
 
-.App-header {
-  background-color: #282c34;
+.p {
+  margin-bottom: 0;
+}
+.ul {
+  padding: 0;
+}
+.btn {
+  margin: 0 8px;
+}
+
+.section {
+  min-height: calc(100vh - (0rem + 0rem)); /*se resta el footer y nav*/
+}
+
+.wrapper {
+  /*se resta el scrollbar*/
+  min-width: calc(100vw - 10px);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 10px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+::-webkit-scrollbar-track {
+  background-color: rgb(234, 229, 224);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(45, 45, 43);
+  border-radius: 0.2rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(45, 45, 43, 0.8);
+}
+
+/* NOT FOUND */
+.error404 {
+  font-size: 5rem;
+}
+
+/* LOGIN */
+.form {
+  border-radius: 2rem;
+}
+
+.form-input {
+  width: 15rem;
+  border-radius: 0.5rem;
+  border: transparent;
+  outline: transparent;
+}
+
+.login-question {
+  cursor: pointer;
 }
