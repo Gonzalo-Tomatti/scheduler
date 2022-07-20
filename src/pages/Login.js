@@ -10,6 +10,7 @@ const Login = () => {
     signUp,
     errorFlag,
     errorMsg,
+    errorType,
     signupFlag,
   } = useContext(GlobalContext);
 
@@ -88,7 +89,9 @@ const Login = () => {
             Iniciar sesión
           </button>
         )}
-        <p className="text-danger">{errorFlag && errorMsg}</p>
+        <p className="text-danger">
+          {errorFlag && errorType === "login" && errorMsg}
+        </p>
         <small onClick={toggleSignupFlag} className="login-question">
           {signupFlag
             ? "¿Ya tienes una cuenta? Inicia sesión."
