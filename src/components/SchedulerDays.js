@@ -9,6 +9,8 @@ const SchedulerDays = () => {
     errorMsg,
     errorType,
     checkInput,
+    handleContinueActivityMode,
+    continueActivityMode,
   } = useContext(GlobalContext);
 
   const weekdays = [
@@ -230,6 +232,28 @@ const SchedulerDays = () => {
           </select>
         </div>
       ))}
+
+      <input
+        type="checkbox"
+        id="continueActivityNextDay"
+        checked={continueActivityMode.continueActivityNextDay}
+        onChange={handleContinueActivityMode}
+      />
+      <label htmlFor="continueActivityNextDay">
+        Permitir que las actividades puedan empezar un día y terminarse al
+        siguiente{" "}
+      </label>
+      <input
+        type="checkbox"
+        id="continueActivityNextWeek"
+        checked={continueActivityMode.continueActivityNextWeek}
+        onChange={handleContinueActivityMode}
+      />
+      <label htmlFor="continueActivityNextWeek">
+        Permitir que si las actividades no entran en una semana se las pase a la
+        siguiente semana{" "}
+      </label>
+
       <small>{errorFlag && errorType === "days" && errorMsg}</small>
       <button onClick={(e) => checkInput(e, "days")}>Crear calendario</button>
     </form>

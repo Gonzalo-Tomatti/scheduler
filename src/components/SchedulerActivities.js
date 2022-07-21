@@ -19,29 +19,25 @@ const SchedulerActivities = () => {
         <h4>Actividades</h4>
         <span>Duración predeterminada para las actividades: </span>
         <div>
-          <label className="my-2" htmlFor="hours">
-            Horas
-          </label>
+          <label className="my-2">Horas</label>
           <input
             className="form-input ps-1"
             onChange={handleDefaultActivitySettings}
             name="hours"
-            id="hours"
             type="number"
             value={defaultActivitySettings.hours}
           />
-          <label className="my-2" htmlFor="minutes">
-            Minutos
-          </label>
+          <label className="my-2">Minutos</label>
           <input
             className="form-input ps-1"
             onChange={handleDefaultActivitySettings}
             name="minutes"
-            id="minutes"
             type="number"
             value={defaultActivitySettings.minutes}
           />
         </div>
+
+        {/* ACTIVIDAD */}
         <label className="my-2" htmlFor="activity">
           Nombre
         </label>
@@ -53,25 +49,19 @@ const SchedulerActivities = () => {
           type="text"
           value={activity.name}
         />
-        <label className="my-2" htmlFor="hours">
-          Horas
-        </label>
+        <label className="my-2">Horas</label>
         <input
           className="form-input ps-1"
           onChange={handleActivity}
           name="hours"
-          id="hours"
           type="number"
           value={activity.hours}
         />
-        <label className="my-2" htmlFor="minutes">
-          Minutos
-        </label>
+        <label className="my-2">Minutos</label>
         <input
           className="form-input ps-1"
           onChange={handleActivity}
           name="minutes"
-          id="minutes"
           type="number"
           value={activity.minutes}
         />

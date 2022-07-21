@@ -3,6 +3,7 @@ import { GlobalContext } from "../context";
 import SchedulerDays from "../components/SchedulerDays";
 import SchedulerActivities from "../components/SchedulerActivities";
 import SchedulerGroups from "../components/SchedulerGroups";
+import Schedule from "../components/Schedule";
 
 const Scheduler = () => {
   const { logOut } = useContext(GlobalContext);
@@ -15,6 +16,7 @@ const Scheduler = () => {
       <SchedulerGroups />
       <SchedulerActivities />
       <SchedulerDays />
+      <Schedule />
     </div>
   );
 };
