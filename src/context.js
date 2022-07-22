@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 //https://big-scheduler.herokuapp.com/
 
-let storedToken;
+let storedToken, storedSchedule;
 window.addEventListener("DOMContentLoaded", () => {
   storedToken = JSON.parse(localStorage.getItem("schedulerToken")) || "";
+  storedSchedule = JSON.parse(localStorage.getItem("lastSchedule")) || [];
 });
 
 export const GlobalContext = createContext();
@@ -47,15 +48,16 @@ export const GlobalProvider = ({ children }) => {
     defaultMinutesTo: 0,
   });
   const [continueActivityMode, setContinueActivityMode] = useState({
-    continueActivityNextWeek: "false",
-    continueActivityNextDay: "false",
+    continueActivityNextWeek: false,
+    continueActivityNextDay: false,
   });
-  const [schedule, setSchedule] = useState([]);
+  const [schedule, setSchedule] = useState(storedSchedule);
+  const [getFlag, setGetFlag] = useState(false);
 
   const handleContinueActivityMode = (e) => {
-    const { name, value } = e.target;
+    const { name, checked } = e.target;
     setContinueActivityMode((prev) => {
-      return { ...prev, [name]: value };
+      return { ...prev, [name]: checked };
     });
   };
 
@@ -63,9 +65,13 @@ export const GlobalProvider = ({ children }) => {
     setErrorMsg(msg);
     setErrorFlag(true);
     setErrorType(type);
+    let time = 3000;
+    if (type === "remainingActivities") {
+      time = 10000;
+    }
     setTimeout(() => {
       setErrorFlag(false);
-    }, 3000);
+    }, time);
   };
   const checkInput = (e, input) => {
     e.preventDefault();
@@ -144,19 +150,27 @@ export const GlobalProvider = ({ children }) => {
     });
   };
 
-  // when you refresh the website, if there's a user set in local storage then you set loggedIn to true
+  // cuando refrescás la página, si hay un token en local storage seteas loggedIn a true
   useEffect(() => {
     if (token) {
       setIsLoggedIn(true);
     }
   }, []);
 
-  //when you log in save the token in local storage, when you close session remove token from local storage
+  // cuando refrescás la página, si hay un schedule guardado en local storage lo recuperás
+  useEffect(() => {
+    if (isLoggedIn) {
+      localStorage.setItem("lastSchedule", JSON.stringify(schedule));
+    }
+  }, [schedule, isLoggedIn]);
+
+  //cuando te logeás, se guarda el token en local storage. Cuando cerrás sesión se borra el token y demás variables de local storage
   useEffect(() => {
     if (isLoggedIn) {
       localStorage.setItem("schedulerToken", JSON.stringify(token));
     } else {
       localStorage.removeItem("schedulerToken");
+      localStorage.removeItem("lastSchedule");
     }
   }, [isLoggedIn]);
 
@@ -259,7 +273,14 @@ export const GlobalProvider = ({ children }) => {
       minutes: activity.minutes,
     };
     setActivities((prevActivities) => {
-      return [...prevActivities, act];
+      const orderedActivities = prevActivities.sort((a, b) => {
+        if (a.duration < b.duration) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+      return [...orderedActivities, act];
     });
     setActivity({
       name: "",
@@ -267,7 +288,7 @@ export const GlobalProvider = ({ children }) => {
       minutes: defaultActivitySettings.minutes,
     });
   };
-
+  console.log(activities);
   const addDay = (e, index) => {
     // e.preventDefault();
     let { name, value } = e.target;
@@ -305,36 +326,21 @@ export const GlobalProvider = ({ children }) => {
         d.hoursFrom = d.hoursFrom || defaultTime.defaultHoursFrom;
         d.minutesTo = d.minutesTo || defaultTime.defaultMinutesTo;
         d.hoursTo = d.hoursTo || defaultTime.defaultHoursTo;
-        //se agrega un campo de tiempo total del día
-        const hours = d.hoursTo - d.hoursFrom;
-        const minutes = d.minutesTo - d.minutesFrom;
-        const totalDayTime = hours * 60 + minutes;
-        const chosenDay = { ...d, totalDayTime };
-        // console.log(
-        //   "chosenDay",
-        //   chosenDay.hoursFrom,
-        //   chosenDay.minutesFrom,
-        //   chosenDay.totalDayTime
-        // );
-        return chosenDay;
+        return d;
       });
     return chosen;
   };
 
+  //ver si la actividad entra en el tiempo restante del día
   const checkIfActivityFitsInDay = (d, hoursTo, minutesTo) => {
-    console.log("inside");
-    //ver si la actividad entra en el tiempo restante del día
-    //ver si la hora se pasa
-    if (hoursTo - d.hoursTo > 0) {
+    //ver si la hora se pasa de la hora a la que termina el día
+    if (hoursTo > d.hoursTo) {
       //no entra
-      console.log("hoursTo - d.hourstTo", hoursTo - d.hoursTo);
       return false;
     }
-    //si da 0 (termina a la misma hora que se acaba el día), ver si los minutos se pasan
-    else if (hoursTo - d.hoursTo === 0) {
-      console.log("hoursTo - d.hoursTo === 0", hoursTo - d.hoursTo === 0);
-      if (minutesTo - d.minutesTo > 0) {
-        console.log("minutesTo - d.minutesTo > 0", minutesTo - d.minutesTo > 0);
+    //si termina a la misma hora que se acaba el día, ver si los minutos se pasan
+    else if (hoursTo === d.hoursTo) {
+      if (minutesTo > d.minutesTo) {
         //no entra
         return false;
       } else {
@@ -347,6 +353,27 @@ export const GlobalProvider = ({ children }) => {
     }
   };
 
+  const changeActivityTime = (
+    hoursFrom,
+    minutesFrom,
+    hoursTo,
+    minutesTo,
+    comparingActivity,
+    a
+  ) => {
+    hoursFrom = comparingActivity.hoursTo;
+    minutesFrom = comparingActivity.minutesTo;
+    minutesTo = comparingActivity.minutesTo + a.minutes;
+    let extraHours = 0;
+    if (minutesTo > 59) {
+      extraHours = Math.trunc(minutesTo / 60);
+      minutesTo = minutesTo % 60;
+    }
+    hoursTo = comparingActivity.hoursTo + a.hours + extraHours;
+    return [hoursFrom, minutesFrom, hoursTo, minutesTo];
+  };
+
+  //ver si las horas de la nueva actividad se superponen con la misma actividad de otro grupo
   const checkOverlap = (
     d,
     a,
@@ -355,68 +382,121 @@ export const GlobalProvider = ({ children }) => {
     hoursFrom,
     hoursTo,
     returnNothing,
-    otherGroupHoursFrom,
-    otherGroupMinutesFrom,
-    otherGroupMinutesTo,
-    otherGroupHoursTo
+    otherGroupsActivities
   ) => {
-    //ver si las horas de la nueva actividad se superponen con la misma actividad de otro grupo
-    if (
-      otherGroupHoursTo - hoursFrom > 0 &&
-      hoursTo - otherGroupHoursFrom > 0
-    ) {
-      //se superponen. Cambiar el horario de inicio de la nueva actividad a la hora en la que termina la actividad con la que se superpone
-      hoursFrom = otherGroupHoursTo;
-      minutesFrom = otherGroupMinutesTo;
-      minutesTo = otherGroupMinutesTo + a.minutes;
-      let extraHours = 0;
-      if (minutesTo > 59) {
-        extraHours = Math.trunc(minutesTo / 60);
-        minutesTo = minutesTo % 60;
-      }
-      hoursTo = hoursTo + a.hours + extraHours;
-
-      console.log(
-        `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
-      );
-      //ver si la actividad entra en el tiempo restante del día
-      if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
-        console.log("no devuelve nada");
-        returnNothing = true;
-
-        // return { name: "" };
-      }
-    }
-    //si termina a la misma hora que empieza la actividad del otro grupo o empieza a la misma hora ver si los minutos se superponen
-    else if (
-      otherGroupHoursTo - hoursFrom === 0 &&
-      hoursTo - otherGroupHoursFrom === 0
-    ) {
-      if (
-        otherGroupMinutesTo - minutesFrom > 0 &&
-        minutesTo - otherGroupMinutesFrom > 0
-      ) {
-        //se superponen. Cambiar los minutos
-        minutesFrom = otherGroupMinutesTo;
-        minutesTo = otherGroupMinutesTo + a.minutes;
-        let extraHours = 0;
-        if (minutesTo > 59) {
-          extraHours = Math.trunc(minutesTo / 60);
-          minutesTo = minutesTo % 60;
-        }
-        hoursTo = hoursTo + extraHours;
+    otherGroupsActivities.forEach((other) => {
+      if (other.hoursTo > hoursFrom && hoursTo > other.hoursFrom) {
+        //se superponen. Cambiar el horario de inicio de la nueva actividad a la hora en la que termina la actividad con la que se superpone
+        [hoursFrom, minutesFrom, hoursTo, minutesTo] = changeActivityTime(
+          hoursFrom,
+          minutesFrom,
+          hoursTo,
+          minutesTo,
+          other,
+          a
+        );
 
         console.log(
-          `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+          `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
         );
-        //ver si la actividad entra en el tiempo restante del día
+
         if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
           console.log("no devuelve nada");
           returnNothing = true;
-          // return { name: "" };
         }
       }
-    }
+      //si termina a la misma hora que empieza la actividad del otro grupo o empieza a la misma hora que termina el otro, ver si los minutos se superponen
+      else if (
+        other.hoursTo - hoursFrom === 0 ||
+        hoursTo - other.hoursFrom === 0
+      ) {
+        if (other.minutesTo > minutesFrom && minutesTo > other.minutesFrom) {
+          //se superponen.
+          [hoursFrom, minutesFrom, hoursTo, minutesTo] = changeActivityTime(
+            hoursFrom,
+            minutesFrom,
+            hoursTo,
+            minutesTo,
+            other,
+            a
+          );
+
+          console.log(
+            `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+          );
+
+          if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
+            console.log("no devuelve nada");
+            returnNothing = true;
+          }
+        }
+
+        if (
+          (other.hoursTo > hoursFrom &&
+            other.minutesTo <= minutesFrom &&
+            minutesTo > other.minutesFrom) ||
+          (hoursTo > other.hoursFrom &&
+            minutesTo <= other.minutesFrom &&
+            other.minutesTo > minutesFrom)
+        ) {
+          console.log("segundo if");
+          //se superponen.
+          [hoursFrom, minutesFrom, hoursTo, minutesTo] = changeActivityTime(
+            hoursFrom,
+            minutesFrom,
+            hoursTo,
+            minutesTo,
+            other,
+            a
+          );
+
+          console.log(
+            `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+          );
+
+          //después de cambiar el horario hay que ver si no se superpone con la misma actividad otro día
+          // if (otherGroupsActivities.length > 0) {
+          //   [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing] =
+          //     checkOverlap(
+          //       d,
+          //       a,
+          //       minutesFrom,
+          //       minutesTo,
+          //       hoursFrom,
+          //       hoursTo,
+          //       returnNothing,
+          //       otherGroupsActivities
+          //     );
+          // }
+
+          // console.log(
+          //   `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+          // );
+
+          if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
+            console.log("no devuelve nada");
+            returnNothing = true;
+          }
+        }
+      }
+      console.log(
+        "dentro del for each",
+        minutesFrom,
+        minutesTo,
+        hoursFrom,
+        hoursTo,
+        returnNothing
+      );
+    });
+    console.log(
+      "FUERA for each",
+      minutesFrom,
+      minutesTo,
+      hoursFrom,
+      hoursTo,
+      returnNothing
+    );
+
     return [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing];
   };
 
@@ -429,12 +509,10 @@ export const GlobalProvider = ({ children }) => {
     returnNothing,
     a,
     d,
-    otherGroupHoursFrom,
-    otherGroupMinutesFrom,
-    otherGroupMinutesTo,
-    otherGroupHoursTo
+    otherGroupsActivities
   ) => {
-    if (otherGroupHoursFrom !== undefined) {
+    //antes de comparar con las actividades del mismo día se compara con la misma actividad de otros grupos (ya que puede pasar que no se superponga con actividades del mismo día)
+    if (otherGroupsActivities.length > 0) {
       [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing] =
         checkOverlap(
           d,
@@ -444,18 +522,14 @@ export const GlobalProvider = ({ children }) => {
           hoursFrom,
           hoursTo,
           returnNothing,
-          otherGroupHoursFrom,
-          otherGroupMinutesFrom,
-          otherGroupMinutesTo,
-          otherGroupHoursTo
+          otherGroupsActivities
         );
-      console.log("SÍ hay actividades pero");
+      console.log("chckea si hay overlap con otro grupo");
 
       console.log(
-        `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+        `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
       );
 
-      //ver si la actividad entra en el tiempo restante del día
       if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
         console.log("no devuelve nada");
         returnNothing = true;
@@ -464,25 +538,26 @@ export const GlobalProvider = ({ children }) => {
 
     if (act.length > 0) {
       act.forEach((ac) => {
+        console.log("pasa por ", ac);
         //ver si las horas de la nueva actividad se superponen con una actividad ya asignada
-        if (ac.hoursTo - hoursFrom > 0 && hoursTo - ac.hoursFrom > 0) {
+        if (ac.hoursTo > hoursFrom && hoursTo > ac.hoursFrom) {
+          console.log("cambia horas");
           //se superponen. Cambiar el horario de inicio de la nueva actividad a la hora en la que termina la actividad con la que se superpone
-          hoursFrom = ac.hoursTo;
-          minutesFrom = ac.minutesTo;
-          minutesTo = ac.minutesTo + a.minutes;
-          let extraHours = 0;
-          if (minutesTo > 59) {
-            extraHours = Math.trunc(minutesTo / 60);
-            minutesTo = minutesTo % 60;
-          }
-          hoursTo = ac.hoursTo + a.hours + extraHours;
+          [hoursFrom, minutesFrom, hoursTo, minutesTo] = changeActivityTime(
+            hoursFrom,
+            minutesFrom,
+            hoursTo,
+            minutesTo,
+            ac,
+            a
+          );
 
           console.log(
-            `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+            `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
           );
 
           //después de cambiar el horario hay que ver si no se superpone con la misma actividad otro día
-          if (otherGroupHoursFrom !== undefined) {
+          if (otherGroupsActivities.length > 0) {
             [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing] =
               checkOverlap(
                 d,
@@ -492,46 +567,40 @@ export const GlobalProvider = ({ children }) => {
                 hoursFrom,
                 hoursTo,
                 returnNothing,
-                otherGroupHoursFrom,
-                otherGroupMinutesFrom,
-                otherGroupMinutesTo,
-                otherGroupHoursTo
+                otherGroupsActivities
               );
           }
 
           console.log(
-            `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+            `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
           );
 
-          //ver si la actividad entra en el tiempo restante del día
           if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
             console.log("no devuelve nada");
             returnNothing = true;
-
-            // return { name: "" };
           }
         }
         //si termina a la misma hora que empieza otra actividad o empieza a la misma hora que termina otra actividad ver si los minutos se superponen
-        else if (ac.hoursTo - hoursFrom === 0 && hoursTo - ac.hoursFrom === 0) {
-          if (
-            ac.minutesTo - minutesFrom > 0 &&
-            minutesTo - ac.minutesFrom > 0
-          ) {
-            //se superponen. Cambiar los minutos
-            minutesFrom = ac.minutesTo;
-            minutesTo = ac.minutesTo + a.minutes;
-            let extraHours = 0;
-            if (minutesTo > 59) {
-              extraHours = Math.trunc(minutesTo / 60);
-              minutesTo = minutesTo % 60;
-            }
-            hoursTo = hoursTo + extraHours;
+        else if (ac.hoursTo - hoursFrom === 0 || hoursTo - ac.hoursFrom === 0) {
+          if (ac.minutesTo > minutesFrom && minutesTo > ac.minutesFrom) {
+            console.log("cambia minutoss");
+
+            //se superponen.
+            [hoursFrom, minutesFrom, hoursTo, minutesTo] = changeActivityTime(
+              hoursFrom,
+              minutesFrom,
+              hoursTo,
+              minutesTo,
+              ac,
+              a
+            );
+
             console.log(
-              `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+              `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
             );
 
             //después de cambiar el horario hay que ver si no se superpone con la misma actividad otro día
-            if (otherGroupHoursFrom !== undefined) {
+            if (otherGroupsActivities.length > 0) {
               [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing] =
                 checkOverlap(
                   d,
@@ -541,123 +610,171 @@ export const GlobalProvider = ({ children }) => {
                   hoursFrom,
                   hoursTo,
                   returnNothing,
-                  otherGroupHoursFrom,
-                  otherGroupMinutesFrom,
-                  otherGroupMinutesTo,
-                  otherGroupHoursTo
+                  otherGroupsActivities
                 );
             }
 
             console.log(
-              `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+              `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
             );
 
-            //ver si la actividad entra en el tiempo restante del día
             if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
               console.log("no devuelve nada");
               returnNothing = true;
+            }
+          }
+          if (
+            (ac.hoursTo > hoursFrom &&
+              ac.minutesTo <= minutesFrom &&
+              minutesTo > ac.minutesFrom) ||
+            (hoursTo > ac.hoursFrom &&
+              minutesTo <= ac.minutesFrom &&
+              ac.minutesTo > minutesFrom)
+          ) {
+            console.log("segundo if");
+            //se superponen.
+            [hoursFrom, minutesFrom, hoursTo, minutesTo] = changeActivityTime(
+              hoursFrom,
+              minutesFrom,
+              hoursTo,
+              minutesTo,
+              ac,
+              a
+            );
+            console.log(
+              `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+            );
 
-              // return { name: "" };
+            //después de cambiar el horario hay que ver si no se superpone con la misma actividad otro día
+            if (otherGroupsActivities.length > 0) {
+              [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing] =
+                checkOverlap(
+                  d,
+                  a,
+                  minutesFrom,
+                  minutesTo,
+                  hoursFrom,
+                  hoursTo,
+                  returnNothing,
+                  otherGroupsActivities
+                );
+            }
+
+            console.log(
+              `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+            );
+
+            if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
+              console.log("no devuelve nada");
+              returnNothing = true;
             }
           }
         }
       });
-      //si no hay actividades pero hay otro grupo con la misma actividad se ve que no se superponga
-    } else if (otherGroupHoursFrom !== undefined) {
-      [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing] =
-        checkOverlap(
-          d,
-          a,
-          minutesFrom,
-          minutesTo,
-          hoursFrom,
-          hoursTo,
-          returnNothing,
-          otherGroupHoursFrom,
-          otherGroupMinutesFrom,
-          otherGroupMinutesTo,
-          otherGroupHoursTo
-        );
-      console.log("no hay actividades pero");
-
-      console.log(
-        `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
-      );
-
-      //ver si la actividad entra en el tiempo restante del día
-      if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
-        console.log("no devuelve nada");
-        returnNothing = true;
-
-        // return { name: "" };
-      }
     }
+    //si no hay actividades pero hay otro grupo con la misma actividad se ve que no se superponga
+    // else if (otherGroupsActivities.length > 0) {
+    //   [minutesFrom, minutesTo, hoursFrom, hoursTo, returnNothing] =
+    //     checkOverlap(
+    //       d,
+    //       a,
+    //       minutesFrom,
+    //       minutesTo,
+    //       hoursFrom,
+    //       hoursTo,
+    //       returnNothing,
+    //       otherGroupsActivities
+    //     );
+    //   console.log("no hay actividades pero");
+
+    //   console.log(
+    //     `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+    //   );
+
+    //   if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
+    //     console.log("no devuelve nada");
+    //     returnNothing = true;
+    //   }
+    // }
+
     // console.log(hoursFrom, minutesFrom, hoursTo, minutesTo, returnNothing);
     return [hoursFrom, minutesFrom, hoursTo, minutesTo, returnNothing];
   };
 
   const getSameActivityFromOtherGroup = (sche, d, a) => {
-    let otherGroupHoursFrom;
-    let otherGroupMinutesFrom;
-    let otherGroupMinutesTo;
-    let otherGroupHoursTo;
-    //si ya hay grupos con horarios
+    const otherGroupsActivities = [];
     console.log("sche.length", sche.length);
+    //ver si ya hay grupos con horarios
     if (sche.length > 0) {
       console.log("hay grupos");
       sche.forEach((group) => {
-        group.days.forEach((day) => {
-          //buscar por cada día de cada grupo cuál es el mismo día al que se le están asignando actividades ahora
-          console.log("día ", day.day);
-          if (d.name === day.day) {
-            console.log("mismo día ", day.day);
-            day.dayActivities.forEach((da) => {
+        group.days.forEach((currentDay) => {
+          //buscar por cada día de cada grupo el mismo día en el que se están asignando actividades ahora
+          console.log("día ", currentDay.day);
+          if (d.name === currentDay.day) {
+            console.log("mismo día ", currentDay.day);
+            currentDay.dayActivities.forEach((da) => {
               //ver si en ese día se encuentra la misma actividad que se está asignando ahora
               console.log("actividad ", da.name);
               if (da.name === a.name) {
                 console.log("misma actividad ", da.name);
-
-                otherGroupHoursFrom = da.hoursFrom;
-                otherGroupMinutesFrom = da.minutesFrom;
-                otherGroupMinutesTo = da.minutesTo;
-                otherGroupHoursTo = da.hoursTo;
+                //si se encuentra la misma actividad, se guarda el horario que tiene
+                const hoursFrom = da.hoursFrom;
+                const minutesFrom = da.minutesFrom;
+                const minutesTo = da.minutesTo;
+                const hoursTo = da.hoursTo;
+                otherGroupsActivities.push({
+                  hoursFrom,
+                  minutesFrom,
+                  minutesTo,
+                  hoursTo,
+                });
               }
             });
           }
         });
       });
     }
-    return [
-      otherGroupHoursFrom,
-      otherGroupMinutesFrom,
-      otherGroupMinutesTo,
-      otherGroupHoursTo,
-    ];
+    return otherGroupsActivities;
+  };
+
+  const postSchedule = (sche) => {
+    const schedule = {
+      days,
+      activities,
+      sche,
+      groups,
+    };
+    axios.post("post-schedule", schedule).then(() => {
+      setTimeout(() => {
+        setGetFlag(!getFlag);
+      }, 3000);
+    });
   };
 
   const createSchedule = () => {
-    // console.log("COMIENZO----------------");
-    const sortedActivities = activities.sort((a, b) =>
-      a.duration < b.duration ? 1 : -1
-    );
-    // console.log("sorted", sortedActivities);
-
     let sche = [];
+    //msg en caso de que no entren todas las actividades
+    let msg =
+      "Se necesita más tiempo en la semana para las siguientes actividades: ";
+
     groups.map((g) => {
-      // console.log("INICIO DE GRUPO--------------");
-      let sortedActivitiesCopy = [...sortedActivities];
-      //almacena cada día con las actividades de ese día
+      console.log(
+        "----------------------------------------------------INICIO DE GRUPOOOOOOOOOOOOOOOOOOOOOOOOO--------------"
+      );
+      //se usa una copia en vez de activities para modificarlo y que vuelva a tener el estado original al principio de cada iteración
+      let activitiesCopy = [...activities];
       const chosenDays = getChosenDays();
 
-      // console.log("chosenDays 0 totalDayTime", chosenDays[0].totalDayTime);
       const days = chosenDays.map((d) => {
-        // console.log("initial totalDayTime", d.name, d.totalDayTime);
-
+        //se van a guardar en act las actividades del día dentro del map de activitiesCopy para checkear si se superponen las actividades en cada iteración
         let act = [];
-        let dayActivities = sortedActivitiesCopy.map((a) => {
+
+        //almacena los días con las actividades de cada día
+        let dayActivities = activitiesCopy.map((a) => {
           let returnNothing = false;
-          //horario de la nueva actividad
           console.log("act", act);
+          //horario de la nueva actividad
           let hoursFrom = d.hoursFrom;
           let minutesFrom = d.minutesFrom;
           let minutesTo = minutesFrom + a.minutes;
@@ -668,40 +785,35 @@ export const GlobalProvider = ({ children }) => {
           }
           let hoursTo = hoursFrom + a.hours + extraHours;
           console.log(
-            `horario inicial: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
+            `horario: horas ${hoursFrom}, minutos ${minutesFrom}, a horas ${hoursTo}, minutos ${minutesTo})} `
           );
 
-          //ver si la actividad entra en el tiempo restante del día
           if (!checkIfActivityFitsInDay(d, hoursTo, minutesTo)) {
-            console.log("doesn't fit");
             returnNothing = true;
-
-            // return { name: "" };
           }
 
-          //obtener el horario de la misma actividad en otro grupo
-          let otherGroupHoursFrom;
-          let otherGroupMinutesFrom;
-          let otherGroupMinutesTo;
-          let otherGroupHoursTo;
-          [
-            otherGroupHoursFrom,
-            otherGroupMinutesFrom,
-            otherGroupMinutesTo,
-            otherGroupHoursTo,
-          ] = getSameActivityFromOtherGroup(sche, d, a);
-          console.log(
-            "otherGroupHoursFrom",
-            otherGroupHoursFrom,
-            "otherGroupMinutesFrom",
-            otherGroupMinutesFrom,
-            "otherGroupMinutesTo",
-            otherGroupMinutesTo,
-            "otherGroupHoursTo",
-            otherGroupHoursTo
-          );
-          //ver si hay actividades ya asignadas ese día
+          //obtener los horarios de la misma actividad en otros grupos
+          let otherGroupsActivities = [];
+          otherGroupsActivities = getSameActivityFromOtherGroup(sche, d, a);
+          console.log("otherGroupsActivities", otherGroupsActivities);
 
+          //ordenar por tiempo de más temprana a más tarde
+          otherGroupsActivities = otherGroupsActivities.sort((a, b) => {
+            if (a.hoursFrom === b.hoursFrom) {
+              if (a.minutesFrom > b.mnutesFrom) {
+                return 1;
+              } else {
+                return -1;
+              }
+            }
+            if (a.hoursFrom > b.hoursFrom) {
+              return 1;
+            } else {
+              return -1;
+            }
+          });
+
+          //ver si se superpone con actividades ya asignadas el mismo día
           [hoursFrom, minutesFrom, hoursTo, minutesTo, returnNothing] =
             checkWithSameDayActivities(
               act,
@@ -712,17 +824,11 @@ export const GlobalProvider = ({ children }) => {
               returnNothing,
               a,
               d,
-              otherGroupHoursFrom,
-              otherGroupMinutesFrom,
-              otherGroupMinutesTo,
-              otherGroupHoursTo
+              otherGroupsActivities
             );
 
-          if (returnNothing) {
-            console.log("no devuelve nada");
-
-            return { name: "" };
-          } else {
+          //si la actividad entra en el día y no se superpone a otra se guarda
+          if (!returnNothing) {
             act = [
               ...act,
               {
@@ -733,7 +839,24 @@ export const GlobalProvider = ({ children }) => {
                 minutesTo,
               },
             ];
+            //se ordenan por tiempo de más temprana a más tarde
+            act = act.sort((a, b) => {
+              if (a.hoursFrom === b.hoursFrom) {
+                if (a.minutesFrom > b.minutesFrom) {
+                  return 1;
+                } else {
+                  return -1;
+                }
+              }
+              if (a.hoursFrom > b.hoursFrom) {
+                return 1;
+              } else {
+                return -1;
+              }
+            });
+
             console.log("devuelve actividad");
+            //devuelve la actividad que se guarda en dayActivities
             return {
               name: a.name,
               hoursFrom,
@@ -743,48 +866,43 @@ export const GlobalProvider = ({ children }) => {
             };
           }
         });
+        //se sacan los indefinidos de cuando no se devolvió la actividad porque se superponía a otra o no entraba en el día
+        dayActivities = dayActivities.filter((da) => {
+          return da !== undefined;
+        });
 
-        //se sacan las actividades asignadas del array
-        // console.log("before sortedActivitiesCopy", sortedActivitiesCopy);
-        // console.log("dayActivities, ", dayActivities);
-        sortedActivitiesCopy = sortedActivitiesCopy.filter(
-          (sa) => !dayActivities.find((da) => da.name === sa.name)
+        //se sacan las actividades ya asignadas de activitiesCopy para no usarlas en el siguiente día
+        activitiesCopy = activitiesCopy.filter(
+          (activ) => !dayActivities.find((da) => da.name === activ.name)
         );
 
-        dayActivities = dayActivities.filter((da) => {
-          return da.name !== "";
-        });
         //retorna cada día con las actividades de ese día
         return { day: d.name, dayActivities };
       });
-      //guarda el grupo con un arreglo de días con actividades asignadas
-      // console.log("sortedActivitiesCopy", sortedActivitiesCopy);
 
-      if (sortedActivitiesCopy.length > 0) {
-        console.log(
-          "Se necesita más tiempo en la semana para las siguientes actividades: "
-        );
-        sortedActivitiesCopy.map((sa) => {
-          console.log("para: ", sa.name);
+      //si quedaron actividades sin asignarse porque no entraron:
+      if (activitiesCopy.length > 0) {
+        activitiesCopy.forEach((ac) => {
+          msg += `${ac.name} (grupo ${g}) - `;
         });
       }
 
+      //se guarda el grupo con sus días con las actividades asignadas
       sche = [...sche, { name: g, days }];
       console.log("sche", sche);
-      setSchedule((prev) => {
-        return [...prev, { name: g, days }];
-      });
     });
+    //si se agregaron actividades al mensaje:
+    if (msg.length > 69) {
+      showError(msg, "remainingActivities");
+    } else {
+      setErrorFlag(false);
+      setErrorType("");
+    }
+
+    setSchedule(sche);
+    //se guarda el schedule armado
+    postSchedule(sche);
   };
-  // console.log("schedule", schedule);
-  // console.log("group", group);
-  // console.log("activity", activity);
-  // console.log("groups:", groups);
-  // console.log("activities", activities);
-  // console.log("days", days);
-  // console.log("defTime", defaultTime);
-  // console.log("defActSet", defaultActivitySettings);
-  // console.log(continueActivityMode);
 
   return (
     <GlobalContext.Provider
@@ -818,6 +936,7 @@ export const GlobalProvider = ({ children }) => {
         checkInput,
         handleContinueActivityMode,
         continueActivityMode,
+        getFlag,
         schedule,
       }}
     >

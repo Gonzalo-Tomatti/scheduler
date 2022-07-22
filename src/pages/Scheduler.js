@@ -6,7 +6,7 @@ import SchedulerGroups from "../components/SchedulerGroups";
 import Schedule from "../components/Schedule";
 
 const Scheduler = () => {
-  const { logOut } = useContext(GlobalContext);
+  const { logOut, errorFlag, errorMsg, errorType } = useContext(GlobalContext);
 
   return (
     <div className="section bg-dark text-light">
@@ -16,6 +16,9 @@ const Scheduler = () => {
       <SchedulerGroups />
       <SchedulerActivities />
       <SchedulerDays />
+      {errorFlag && errorType === "remainingActivities" && (
+        <p className="text-danger">{errorMsg}</p>
+      )}
       <Schedule />
     </div>
   );

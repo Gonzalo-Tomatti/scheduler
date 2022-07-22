@@ -236,7 +236,8 @@ const SchedulerDays = () => {
       <input
         type="checkbox"
         id="continueActivityNextDay"
-        checked={continueActivityMode.continueActivityNextDay}
+        name="continueActivityNextDay"
+        value={continueActivityMode.continueActivityNextDay}
         onChange={handleContinueActivityMode}
       />
       <label htmlFor="continueActivityNextDay">
@@ -246,7 +247,8 @@ const SchedulerDays = () => {
       <input
         type="checkbox"
         id="continueActivityNextWeek"
-        checked={continueActivityMode.continueActivityNextWeek}
+        name="continueActivityNextWeek"
+        value={continueActivityMode.continueActivityNextWeek}
         onChange={handleContinueActivityMode}
       />
       <label htmlFor="continueActivityNextWeek">
