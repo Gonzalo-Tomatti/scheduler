@@ -4,10 +4,13 @@ import { useNavigate } from "react-router-dom";
 
 //https://big-scheduler.herokuapp.com/
 
-let storedToken, storedSchedule;
+let storedToken, storedSchedule, storedActivities, storedDays, storedGroups;
 window.addEventListener("DOMContentLoaded", () => {
   storedToken = JSON.parse(localStorage.getItem("schedulerToken")) || "";
   storedSchedule = JSON.parse(localStorage.getItem("lastSchedule")) || [];
+  storedActivities = JSON.parse(localStorage.getItem("lastActivities")) || [];
+  storedGroups = JSON.parse(localStorage.getItem("lastGroups")) || [];
+  storedDays = JSON.parse(localStorage.getItem("lastDays")) || [];
 });
 
 export const GlobalContext = createContext();
@@ -28,9 +31,9 @@ export const GlobalProvider = ({ children }) => {
   const [errorFlag, setErrorFlag] = useState(false);
   const [errorType, setErrorType] = useState(false);
   const [signupFlag, setSignupFlag] = useState(false);
-  const [groups, setGroups] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [days, setDays] = useState([]);
+  const [groups, setGroups] = useState(storedGroups);
+  const [activities, setActivities] = useState(storedActivities);
+  const [days, setDays] = useState(storedDays);
   const [group, setGroup] = useState("");
   const [activity, setActivity] = useState({
     name: "",
@@ -53,7 +56,76 @@ export const GlobalProvider = ({ children }) => {
   });
   const [schedule, setSchedule] = useState(storedSchedule);
   const [getFlag, setGetFlag] = useState(false);
+  const [editGroupFlag, setEditGroupFlag] = useState(false);
+  const [editActivityFlag, setEditActivityFlag] = useState(false);
+  const [editGroupIndex, setEditGroupIndex] = useState();
+  const [editActivityIndex, setEditActivityIndex] = useState();
 
+  const editGroup = (name, index) => {
+    setEditGroupFlag(true);
+    setGroup(name);
+    setEditGroupIndex(index);
+  };
+
+  const commitEditGroup = () => {
+    setGroups((prev) => {
+      const newGroups = prev.map((g, index) => {
+        if (index === editGroupIndex) {
+          return group;
+        } else {
+          return g;
+        }
+      });
+      return newGroups;
+    });
+    setGroup("");
+    setEditGroupFlag(false);
+    setErrorFlag(false);
+  };
+  const deleteGroup = (name) => {
+    setGroups((prev) => {
+      const newGroups = prev.filter((g) => {
+        return g !== name;
+      });
+      return newGroups;
+    });
+  };
+
+  const editActivity = (act, index) => {
+    setEditActivityFlag(true);
+    setActivity(act);
+    setEditActivityIndex(index);
+  };
+
+  const commitEditActivity = () => {
+    setActivities((prev) => {
+      const newActivities = prev.map((a, index) => {
+        if (index === editActivityIndex) {
+          return activity;
+        } else {
+          return a;
+        }
+      });
+      return newActivities;
+    });
+    setActivity({
+      name: "",
+      hours: defaultActivitySettings.hours,
+      minutes: defaultActivitySettings.minutes,
+    });
+    setErrorFlag(false);
+    setEditActivityFlag(false);
+    setErrorFlag(false);
+  };
+
+  const deleteActivity = (name) => {
+    setActivities((prev) => {
+      const newActivities = prev.filter((a) => {
+        return a.name !== name;
+      });
+      return newActivities;
+    });
+  };
   const handleContinueActivityMode = (e) => {
     const { name, checked } = e.target;
     setContinueActivityMode((prev) => {
@@ -77,25 +149,42 @@ export const GlobalProvider = ({ children }) => {
     e.preventDefault();
     switch (input) {
       case "group":
+      case "editGroup":
         if (group === "") {
           showError("Ingrese un nombre de grupo.", input);
-        } else if (groups.find((g) => g === group)) {
+        } else if (
+          groups.find((g, index) => g === group && index !== editGroupIndex)
+        ) {
           showError("El grupo ya existe.", input);
         } else {
-          addGroup();
+          if (input === "group") {
+            addGroup();
+          } else if (input === "editGroup") {
+            commitEditGroup();
+          }
         }
         break;
+
       case "activity":
+      case "editActivity":
         if (activity.name === "") {
           showError("Ingrese un nombre para la actividad.", input);
-        } else if (activities.find((a) => a.name === activity.name)) {
+        } else if (
+          activities.find(
+            (a, index) =>
+              a.name === activity.name && index !== editActivityIndex
+          )
+        ) {
           showError("La actividad ya existe.", input);
         } else if (activity.hours === 0 && activity.minutes === 0) {
           showError("Ingrese el tiempo que la actividad requiere.", input);
-        } else {
+        } else if (input === "activity") {
           addActivity();
+        } else {
+          commitEditActivity();
         }
         break;
+
       case "days":
         if (!days.filter((d) => d.name !== undefined).length) {
           showError("No se han seleccionado días.", input);
@@ -106,6 +195,7 @@ export const GlobalProvider = ({ children }) => {
     }
   };
 
+  //login form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser((prevUser) => {
@@ -161,8 +251,11 @@ export const GlobalProvider = ({ children }) => {
   useEffect(() => {
     if (isLoggedIn) {
       localStorage.setItem("lastSchedule", JSON.stringify(schedule));
+      localStorage.setItem("lastDays", JSON.stringify(days));
+      localStorage.setItem("lastGroups", JSON.stringify(groups));
+      localStorage.setItem("lastActivities", JSON.stringify(activities));
     }
-  }, [schedule, isLoggedIn]);
+  }, [schedule, days, groups, activities, isLoggedIn]);
 
   //cuando te logeás, se guarda el token en local storage. Cuando cerrás sesión se borra el token y demás variables de local storage
   useEffect(() => {
@@ -171,6 +264,9 @@ export const GlobalProvider = ({ children }) => {
     } else {
       localStorage.removeItem("schedulerToken");
       localStorage.removeItem("lastSchedule");
+      localStorage.removeItem("lastGroups");
+      localStorage.removeItem("lastActivities");
+      localStorage.removeItem("lastDays");
     }
   }, [isLoggedIn]);
 
@@ -226,6 +322,10 @@ export const GlobalProvider = ({ children }) => {
       email: "",
       repeatPassword: "",
     });
+    setSchedule([]);
+    setActivities([]);
+    setGroups([]);
+    setDays([]);
     navigate("/");
   };
 
@@ -263,6 +363,7 @@ export const GlobalProvider = ({ children }) => {
       return [...prevGroups, group];
     });
     setGroup("");
+    setErrorFlag(false);
   };
   const addActivity = () => {
     const duration = activity.hours * 60 + activity.minutes;
@@ -287,6 +388,7 @@ export const GlobalProvider = ({ children }) => {
       hours: defaultActivitySettings.hours,
       minutes: defaultActivitySettings.minutes,
     });
+    setErrorFlag(false);
   };
   console.log(activities);
   const addDay = (e, index) => {
@@ -738,18 +840,19 @@ export const GlobalProvider = ({ children }) => {
     return otherGroupsActivities;
   };
 
-  const postSchedule = (sche) => {
-    const schedule = {
+  const postSchedule = () => {
+    const newSchedule = {
       days,
       activities,
-      sche,
+      schedule,
       groups,
     };
-    axios.post("post-schedule", schedule).then(() => {
+    axios.post("post-schedule", newSchedule).then(() => {
       setTimeout(() => {
         setGetFlag(!getFlag);
       }, 3000);
     });
+    setSchedule([]);
   };
 
   const createSchedule = () => {
@@ -876,6 +979,22 @@ export const GlobalProvider = ({ children }) => {
           (activ) => !dayActivities.find((da) => da.name === activ.name)
         );
 
+        //ordenar por hora
+        dayActivities = dayActivities.sort((a, b) => {
+          if (a.hoursFrom === b.hoursFrom) {
+            if (a.minutesFrom > b.minutesFrom) {
+              return 1;
+            } else {
+              return -1;
+            }
+          }
+          if (a.hoursFrom > b.hoursFrom) {
+            return 1;
+          } else {
+            return -1;
+          }
+        });
+
         //retorna cada día con las actividades de ese día
         return { day: d.name, dayActivities };
       });
@@ -899,9 +1018,33 @@ export const GlobalProvider = ({ children }) => {
       setErrorType("");
     }
 
+    //formatear hora
+    sche.map((g) =>
+      g.days.map((day) =>
+        day.dayActivities.map((da) => {
+          da.hoursFrom =
+            da.hoursFrom < 10
+              ? "0" + da.hoursFrom.toString()
+              : da.hoursFrom.toString();
+          da.minutesFrom =
+            da.minutesFrom < 10
+              ? "0" + da.minutesFrom.toString()
+              : da.minutesFrom.toString();
+          da.hoursTo =
+            da.hoursTo < 10
+              ? "0" + da.hoursTo.toString()
+              : da.hoursTo.toString();
+          da.minutesTo =
+            da.minutesTo < 10
+              ? "0" + da.minutesTo.toString()
+              : da.minutesTo.toString();
+          return da;
+        })
+      )
+    );
+
     setSchedule(sche);
     //se guarda el schedule armado
-    postSchedule(sche);
   };
 
   return (
@@ -938,6 +1081,13 @@ export const GlobalProvider = ({ children }) => {
         continueActivityMode,
         getFlag,
         schedule,
+        editGroup,
+        deleteGroup,
+        editActivity,
+        deleteActivity,
+        editGroupFlag,
+        editActivityFlag,
+        postSchedule,
       }}
     >
       {children}

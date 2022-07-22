@@ -1,5 +1,7 @@
 import React, { useContext } from "react";
 import { GlobalContext } from "../context";
+import { FaTrashAlt } from "react-icons/fa";
+import { FaRegEdit } from "react-icons/fa";
 
 const SchedulerActivities = () => {
   const {
@@ -12,16 +14,19 @@ const SchedulerActivities = () => {
     errorMsg,
     errorType,
     checkInput,
+    editActivity,
+    deleteActivity,
+    editActivityFlag,
   } = useContext(GlobalContext);
   return (
     <div>
       <form>
-        <h4>Actividades</h4>
+        <h5 className="ms-2">Actividades</h5>
         <span>Duración predeterminada para las actividades: </span>
         <div>
           <label className="my-2">Horas</label>
           <input
-            className="form-input ps-1"
+            className="short-form-input ps-1"
             onChange={handleDefaultActivitySettings}
             name="hours"
             type="number"
@@ -29,7 +34,7 @@ const SchedulerActivities = () => {
           />
           <label className="my-2">Minutos</label>
           <input
-            className="form-input ps-1"
+            className="short-form-input ps-1"
             onChange={handleDefaultActivitySettings}
             name="minutes"
             type="number"
@@ -51,7 +56,7 @@ const SchedulerActivities = () => {
         />
         <label className="my-2">Horas</label>
         <input
-          className="form-input ps-1"
+          className="short-form-input ps-1"
           onChange={handleActivity}
           name="hours"
           type="number"
@@ -59,19 +64,54 @@ const SchedulerActivities = () => {
         />
         <label className="my-2">Minutos</label>
         <input
-          className="form-input ps-1"
+          className="short-form-input ps-1"
           onChange={handleActivity}
           name="minutes"
           type="number"
           value={activity.minutes}
         />
-        <button onClick={(e) => checkInput(e, "activity")}>Añadir</button>
-        <small>{errorFlag && errorType === "activity" && errorMsg}</small>
+
+        {editActivityFlag ? (
+          <button
+            className="btn btn-success btn-sm"
+            onClick={(e) => checkInput(e, "editActivity")}
+          >
+            Editar
+          </button>
+        ) : (
+          <button
+            className="btn btn-success btn-sm"
+            onClick={(e) => checkInput(e, "activity")}
+          >
+            Añadir
+          </button>
+        )}
+        <div>
+          <small className="text-danger">
+            {errorFlag &&
+              (errorType === "activity" || errorType === "editActivity") &&
+              errorMsg}
+          </small>
+        </div>
       </form>
       <ul>
         {activities.map((a, index) => (
-          <li key={index}>
+          <li key={index} className="d-flex li">
             {a.name}, {a.hours}, {a.minutes}
+            <div className="btn-container ms-auto">
+              {/*edit Activity*/}
+
+              <FaRegEdit
+                className="mx-2 edit-trash"
+                onClick={() => editActivity(a, index)}
+              />
+              {/*delete Activity*/}
+
+              <FaTrashAlt
+                className="mx-2 edit-trash"
+                onClick={() => deleteActivity(a.name)}
+              />
+            </div>
           </li>
         ))}
       </ul>

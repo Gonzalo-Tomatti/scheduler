@@ -112,152 +112,172 @@ const SchedulerDays = () => {
   ];
   return (
     <form>
-      <h4>Días</h4>
-      <span>Horario para días con horarios no especificados: </span>
-      <label>De </label>
-      <select
-        name="defaultHoursFrom"
-        className=""
-        onChange={handleDefaultTimeSettings}
-      >
-        <option value="">-----</option>
-        {hours.map((h, index) => (
-          <option key={index} value={h}>
-            {h}
-          </option>
-        ))}
-      </select>
-      <label>: </label>
-      <select
-        name="defaultMinutesFrom"
-        className=""
-        onChange={handleDefaultTimeSettings}
-      >
-        <option value="">-----</option>
-        {minutes.map((m, index) => (
-          <option key={index} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
-      <label>A </label>
-      <select
-        name="defaultHoursTo"
-        className=""
-        onChange={handleDefaultTimeSettings}
-      >
-        <option value="">-----</option>
-        {hours.map((h, index) => (
-          <option key={index} value={h}>
-            {h}
-          </option>
-        ))}
-      </select>
-      <label>: </label>
-      <select
-        name="defaultMinutesTo"
-        className=""
-        onChange={handleDefaultTimeSettings}
-      >
-        <option value="">-----</option>
-        {minutes.map((m, index) => (
-          <option key={index} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
+      <h5 className="ms-2">Días</h5>
+      <p>Horario para días con horarios no especificados: </p>
+      <div className="mb-3">
+        <label>Desde </label>
+        <select
+          name="defaultHoursFrom"
+          className="select"
+          onChange={handleDefaultTimeSettings}
+        >
+          <option value="">---</option>
+          {hours.map((h, index) => (
+            <option key={index} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <label>: </label>
+        <select
+          name="defaultMinutesFrom"
+          className="select"
+          onChange={handleDefaultTimeSettings}
+        >
+          <option value="">---</option>
+          {minutes.map((m, index) => (
+            <option key={index} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <label>Hasta </label>
+        <select
+          name="defaultHoursTo"
+          className="select"
+          onChange={handleDefaultTimeSettings}
+        >
+          <option value="">---</option>
+          {hours.map((h, index) => (
+            <option key={index} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <label>: </label>
+        <select
+          name="defaultMinutesTo"
+          className="select"
+          onChange={handleDefaultTimeSettings}
+        >
+          <option value="">---</option>
+          {minutes.map((m, index) => (
+            <option key={index} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      </div>
       {weekdays.map((d, index) => (
-        <div key={index} className="form-check">
-          <input
-            onChange={(e) => addDay(e, index)}
-            className="form-check-input"
-            type="checkbox"
-            value={d}
-            name={"name"}
-          />
-          <label className="form-check-label" htmlFor="flexCheckDefault">
-            {d}
-          </label>
-          <label>De </label>
-          <select
-            name="hoursFrom"
-            className=""
-            onChange={(e) => addDay(e, index)}
-          >
-            <option value="">-----</option>
-            {hours.map((h, index) => (
-              <option key={index} value={h}>
-                {h}
-              </option>
-            ))}
-          </select>
-          <label>: </label>
-          <select
-            name="minutesFrom"
-            className=""
-            onChange={(e) => addDay(e, index)}
-          >
-            <option value="">-----</option>
-            {minutes.map((m, index) => (
-              <option key={index} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <label>A </label>
-          <select
-            name="hoursTo"
-            className=""
-            onChange={(e) => addDay(e, index)}
-          >
-            <option value="">-----</option>
-            {hours.map((h, index) => (
-              <option key={index} value={h}>
-                {h}
-              </option>
-            ))}
-          </select>
-          <label>: </label>
-          <select
-            name="minutesTo"
-            className=""
-            onChange={(e) => addDay(e, index)}
-          >
-            <option value="">-----</option>
-            {minutes.map((m, index) => (
-              <option key={index} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+        <div key={index} className="d-sm-flex my-3">
+          <div className="form-check">
+            <input
+              onChange={(e) => addDay(e, index)}
+              className="form-check-input"
+              type="checkbox"
+              value={d}
+              name={"name"}
+            />
+            <label
+              className="form-check-label day-label"
+              htmlFor="flexCheckDefault"
+            >
+              {d}
+            </label>
+          </div>
+          <div>
+            <label>Desde </label>
+            <select
+              name="hoursFrom"
+              className="select"
+              onChange={(e) => addDay(e, index)}
+            >
+              <option value="">---</option>
+              {hours.map((h, index) => (
+                <option key={index} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
+            <label>: </label>
+            <select
+              name="minutesFrom"
+              className="select"
+              onChange={(e) => addDay(e, index)}
+            >
+              <option value="">---</option>
+              {minutes.map((m, index) => (
+                <option key={index} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <label>Hasta </label>
+            <select
+              name="hoursTo"
+              className="select"
+              onChange={(e) => addDay(e, index)}
+            >
+              <option value="">---</option>
+              {hours.map((h, index) => (
+                <option key={index} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
+            <label>: </label>
+            <select
+              name="minutesTo"
+              className="select"
+              onChange={(e) => addDay(e, index)}
+            >
+              <option value="">---</option>
+              {minutes.map((m, index) => (
+                <option key={index} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       ))}
 
-      <input
-        type="checkbox"
-        id="continueActivityNextDay"
-        name="continueActivityNextDay"
-        value={continueActivityMode.continueActivityNextDay}
-        onChange={handleContinueActivityMode}
-      />
-      <label htmlFor="continueActivityNextDay">
-        Permitir que las actividades puedan empezar un día y terminarse al
-        siguiente{" "}
-      </label>
-      <input
-        type="checkbox"
-        id="continueActivityNextWeek"
-        name="continueActivityNextWeek"
-        value={continueActivityMode.continueActivityNextWeek}
-        onChange={handleContinueActivityMode}
-      />
-      <label htmlFor="continueActivityNextWeek">
-        Permitir que si las actividades no entran en una semana se las pase a la
-        siguiente semana{" "}
-      </label>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="continueActivityNextDay"
+          name="continueActivityNextDay"
+          value={continueActivityMode.continueActivityNextDay}
+          onChange={handleContinueActivityMode}
+        />
+        <label className="form-check-label" htmlFor="continueActivityNextDay">
+          Permitir que las actividades puedan empezar un día y terminarse al
+          siguiente{" "}
+        </label>
+      </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="continueActivityNextWeek"
+          name="continueActivityNextWeek"
+          value={continueActivityMode.continueActivityNextWeek}
+          onChange={handleContinueActivityMode}
+        />
+        <label className="form-check-label" htmlFor="continueActivityNextWeek">
+          Permitir que si las actividades no entran en una semana se las pase a
+          la siguiente semana{" "}
+        </label>
+      </div>
 
       <small>{errorFlag && errorType === "days" && errorMsg}</small>
-      <button onClick={(e) => checkInput(e, "days")}>Crear calendario</button>
+      <button
+        className="btn btn-success btn-sm mt-3 ms-5"
+        onClick={(e) => checkInput(e, "days")}
+      >
+        Crear calendario
+      </button>
     </form>
   );
 };

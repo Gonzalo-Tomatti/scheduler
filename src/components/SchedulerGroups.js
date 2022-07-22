@@ -1,5 +1,7 @@
 import React, { useContext } from "react";
 import { GlobalContext } from "../context";
+import { FaTrashAlt } from "react-icons/fa";
+import { FaRegEdit } from "react-icons/fa";
 
 const SchedulerGroups = () => {
   const {
@@ -10,11 +12,14 @@ const SchedulerGroups = () => {
     errorMsg,
     errorType,
     checkInput,
+    editGroup,
+    deleteGroup,
+    editGroupFlag,
   } = useContext(GlobalContext);
   return (
     <div>
       <form>
-        <h4>Grupos</h4>
+        <h5 className="ms-2">Grupos/Personas</h5>
         <label className="my-2" htmlFor="group">
           Nombre
         </label>
@@ -27,12 +32,48 @@ const SchedulerGroups = () => {
           value={group}
           autoFocus
         />
-        <button onClick={(e) => checkInput(e, "group")}>Añadir</button>
-        <small>{errorFlag && errorType === "group" && errorMsg}</small>
+        {editGroupFlag ? (
+          <button
+            className="btn btn-success btn-sm"
+            onClick={(e) => checkInput(e, "editGroup")}
+          >
+            Editar
+          </button>
+        ) : (
+          <button
+            className="btn btn-success btn-sm"
+            onClick={(e) => checkInput(e, "group")}
+          >
+            Añadir
+          </button>
+        )}
+        <div>
+          <small className="text-danger">
+            {errorFlag &&
+              (errorType === "group" || errorType === "editGroup") &&
+              errorMsg}
+          </small>
+        </div>
       </form>
       <ul>
         {groups.map((g, index) => (
-          <li key={index}>{g}</li>
+          <li key={index} className="d-flex li">
+            {g}
+            <div className="btn-container ms-auto">
+              {/*edit Group*/}
+
+              <FaRegEdit
+                className="mx-2 edit-trash"
+                onClick={() => editGroup(g, index)}
+              />
+              {/*delete Group*/}
+
+              <FaTrashAlt
+                className="mx-2 edit-trash"
+                onClick={() => deleteGroup(g)}
+              />
+            </div>
+          </li>
         ))}
       </ul>
     </div>

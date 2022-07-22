@@ -3,7 +3,7 @@ import axios from "axios";
 import { GlobalContext } from "../context";
 
 const Schedule = () => {
-  const { schedule, errorType } = useContext(GlobalContext);
+  const { schedule, errorType, postSchedule } = useContext(GlobalContext);
 
   // setTimeout(() => {
   //   setFetchingSchedule(false);
@@ -17,31 +17,49 @@ const Schedule = () => {
   //     .catch((err) => console.log(err));
   // }, [fetchingSchedule, getFlag]);
 
-  console.log(schedule);
-
   return (
-    <div className="section p-3 text-center text-light">
-      <h4 className="mb-4">Horarios</h4>
-      {!schedule.length || errorType === "remainingActivities" ? (
-        <h4 className="mt-5">No se han creado horarios aún.</h4>
-      ) : (
-        <div>
+    <div className="">
+      {!schedule.length || errorType === "remainingActivities" ? null : (
+        <div className="section p-3 text-center">
           {schedule.map((g, index) => (
-            <div key={index}>
-              <p>{g.name}</p>
-              {g.days.map((day, index) => (
-                <div key={index}>
-                  <div> {day.day}</div>
-                  {day.dayActivities.map((da, index) => (
-                    <p key={index}>
-                      {da.name} = {da.hoursFrom}:{da.minutesFrom} - {da.hoursTo}
-                      :{da.minutesTo}
-                    </p>
+            <div key={index} className="p-3 text-capitalize">
+              <h4 className="text-center">{g.name}</h4>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Día</th>
+                    <th scope="col">Actividad</th>
+                    <th scope="col">Hora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {g.days.map((d, index) => (
+                    <tr key={index}>
+                      <td>{d.day}</td>
+                      <td>
+                        {d.dayActivities.map((da, index) => (
+                          <div key={index} className="my-1">
+                            {da.name}
+                          </div>
+                        ))}
+                      </td>
+                      <td>
+                        {d.dayActivities.map((da, index) => (
+                          <div key={index} className="my-1">
+                            {da.hoursFrom}:{da.minutesFrom} - {da.hoursTo}:
+                            {da.minutesTo}
+                          </div>
+                        ))}
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              ))}
+                </tbody>
+              </table>
             </div>
           ))}
+          <button onClick={postSchedule} className="btn btn-success">
+            Guardar Horarios
+          </button>
         </div>
       )}
     </div>
