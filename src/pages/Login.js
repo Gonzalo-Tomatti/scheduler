@@ -15,7 +15,7 @@ const Login = () => {
   } = useContext(GlobalContext);
 
   return (
-    <div className="section d-flex justify-content-center">
+    <div className="sectionNoNav d-flex justify-content-center">
       <form className="d-flex flex-column align-items-center justify-content-center p-3 form">
         {signupFlag && (
           <div className="form-group m-2 d-flex flex-column">

@@ -17,6 +17,7 @@ const SchedulerActivities = () => {
     editActivity,
     deleteActivity,
     editActivityFlag,
+    formatTime,
   } = useContext(GlobalContext);
   return (
     <div>
@@ -94,24 +95,24 @@ const SchedulerActivities = () => {
           </small>
         </div>
       </form>
-      <ul>
+      <ul className="li">
         {activities.map((a, index) => (
           <li key={index} className="d-flex li">
-            {a.name}, {a.hours}, {a.minutes}
-            <div className="btn-container ms-auto">
-              {/*edit Activity*/}
+            <span className="act-name d-inline-block text-break">
+              {a.name} durante {formatTime(a.hours)}:{formatTime(a.minutes)}
+            </span>
+            {/*edit Activity*/}
 
-              <FaRegEdit
-                className="mx-2 edit-trash"
-                onClick={() => editActivity(a, index)}
-              />
-              {/*delete Activity*/}
+            <FaRegEdit
+              className="mx-2 edit-trash ms-auto"
+              onClick={() => editActivity(a, index)}
+            />
+            {/*delete Activity*/}
 
-              <FaTrashAlt
-                className="mx-2 edit-trash"
-                onClick={() => deleteActivity(a.name)}
-              />
-            </div>
+            <FaTrashAlt
+              className="mx-2 edit-trash"
+              onClick={() => deleteActivity(a.name)}
+            />
           </li>
         ))}
       </ul>

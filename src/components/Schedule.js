@@ -1,53 +1,57 @@
-import React, { useContext, useState, useEffect } from "react";
-import axios from "axios";
+import React, { useContext } from "react";
 import { GlobalContext } from "../context";
 
 const Schedule = () => {
-  const { schedule, errorType, postSchedule } = useContext(GlobalContext);
-
-  // setTimeout(() => {
-  //   setFetchingSchedule(false);
-  // }, 1000);
-  // useEffect(() => {
-  //   axios
-  //     .get(`get-schedules`)
-  //     .then((res) => {
-  //       setSchedule(res.data);
-  //     })
-  //     .catch((err) => console.log(err));
-  // }, [fetchingSchedule, getFlag]);
+  const {
+    schedule,
+    errorType,
+    errorFlag,
+    errorMsg,
+    checkInput,
+    handleScheduleName,
+    scheduleName,
+  } = useContext(GlobalContext);
 
   return (
     <div className="">
       {!schedule.length || errorType === "remainingActivities" ? null : (
-        <div className="section p-3 text-center">
+        <div className="p-3 text-center">
           {schedule.map((g, index) => (
             <div key={index} className="p-3 text-capitalize">
               <h4 className="text-center">{g.name}</h4>
               <table className="table">
                 <thead>
                   <tr>
-                    <th scope="col">Día</th>
-                    <th scope="col">Actividad</th>
-                    <th scope="col">Hora</th>
+                    <th className="col-3">Día</th>
+                    <div className="col-12">
+                      <div className="row">
+                        <th className="col-6">Actividad</th>
+                        <th className="col-6">Hora</th>
+                      </div>
+                    </div>
                   </tr>
                 </thead>
                 <tbody>
                   {g.days.map((d, index) => (
                     <tr key={index}>
-                      <td>{d.day}</td>
-                      <td>
+                      {/*days*/}
+                      <td className="text-capitalize  ">{d.day}</td>
+
+                      {/*day activities*/}
+                      <td className="text-break li ">
                         {d.dayActivities.map((da, index) => (
-                          <div key={index} className="my-1">
-                            {da.name}
-                          </div>
-                        ))}
-                      </td>
-                      <td>
-                        {d.dayActivities.map((da, index) => (
-                          <div key={index} className="my-1">
-                            {da.hoursFrom}:{da.minutesFrom} - {da.hoursTo}:
-                            {da.minutesTo}
+                          <div key={index} className="row ">
+                            <div className="my-1 col-6">{da.name}</div>
+                            <div className="my-1 col-6">
+                              {da.hoursFrom}:{da.minutesFrom} - {da.hoursTo}:
+                              {da.minutesTo}
+                            </div>
+
+                            <hr
+                              className={
+                                index === d.dayActivities.length - 1 && "d-none"
+                              }
+                            ></hr>
                           </div>
                         ))}
                       </td>
@@ -57,9 +61,33 @@ const Schedule = () => {
               </table>
             </div>
           ))}
-          <button onClick={postSchedule} className="btn btn-success">
-            Guardar Horarios
-          </button>
+
+          <form>
+            <label className="my-2" htmlFor="scheduleName">
+              Nombre de horarios
+            </label>
+            <input
+              className="form-input ps-1"
+              onChange={handleScheduleName}
+              name="scheduleName"
+              id="scheduleName"
+              type="text"
+              value={scheduleName}
+              autoFocus
+            />
+
+            <button
+              onClick={(e) => checkInput(e, "saveSchedule")}
+              className="btn btn-success"
+            >
+              Guardar
+            </button>
+          </form>
+          <div>
+            <small className="text-danger">
+              {errorFlag && errorType === "saveSchedule" && errorMsg}
+            </small>
+          </div>
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ const SchedulerDays = () => {
     checkInput,
     handleContinueActivityMode,
     continueActivityMode,
+    days,
   } = useContext(GlobalContext);
 
   const weekdays = [
@@ -175,9 +176,11 @@ const SchedulerDays = () => {
               onChange={(e) => addDay(e, index)}
               className="form-check-input"
               type="checkbox"
-              value={d}
-              name={"name"}
+              value={days[index].enabled}
+              checked={days[index].enabled}
+              name={"enabled"}
             />
+
             <label
               className="form-check-label day-label"
               htmlFor="flexCheckDefault"
@@ -188,6 +191,7 @@ const SchedulerDays = () => {
           <div>
             <label>Desde </label>
             <select
+              // disabled={days.find((day) => day.name === d)}
               name="hoursFrom"
               className="select"
               onChange={(e) => addDay(e, index)}
@@ -249,6 +253,7 @@ const SchedulerDays = () => {
           id="continueActivityNextDay"
           name="continueActivityNextDay"
           value={continueActivityMode.continueActivityNextDay}
+          checked={continueActivityMode.continueActivityNextDay}
           onChange={handleContinueActivityMode}
         />
         <label className="form-check-label" htmlFor="continueActivityNextDay">
@@ -263,6 +268,7 @@ const SchedulerDays = () => {
           id="continueActivityNextWeek"
           name="continueActivityNextWeek"
           value={continueActivityMode.continueActivityNextWeek}
+          checked={continueActivityMode.continueActivityNextWeek}
           onChange={handleContinueActivityMode}
         />
         <label className="form-check-label" htmlFor="continueActivityNextWeek">
@@ -270,8 +276,11 @@ const SchedulerDays = () => {
           la siguiente semana{" "}
         </label>
       </div>
-
-      <small>{errorFlag && errorType === "days" && errorMsg}</small>
+      <div>
+        <small className="text-danger">
+          {errorFlag && errorType === "days" && errorMsg}
+        </small>
+      </div>
       <button
         className="btn btn-success btn-sm mt-3 ms-5"
         onClick={(e) => checkInput(e, "days")}

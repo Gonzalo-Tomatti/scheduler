@@ -4,13 +4,32 @@ import { useNavigate } from "react-router-dom";
 
 //https://big-scheduler.herokuapp.com/
 
-let storedToken, storedSchedule, storedActivities, storedDays, storedGroups;
+let storedToken,
+  storedSchedule,
+  storedActivities,
+  storedDays,
+  storedGroups,
+  storedContinueSettings;
 window.addEventListener("DOMContentLoaded", () => {
   storedToken = JSON.parse(localStorage.getItem("schedulerToken")) || "";
   storedSchedule = JSON.parse(localStorage.getItem("lastSchedule")) || [];
   storedActivities = JSON.parse(localStorage.getItem("lastActivities")) || [];
+  storedContinueSettings = JSON.parse(
+    localStorage.getItem("StoredContinueSettings")
+  ) || {
+    continueActivityNextWeek: false,
+    continueActivityNextDay: false,
+  };
   storedGroups = JSON.parse(localStorage.getItem("lastGroups")) || [];
-  storedDays = JSON.parse(localStorage.getItem("lastDays")) || [];
+  storedDays = JSON.parse(localStorage.getItem("lastDays")) || [
+    { name: "lunes", enabled: false },
+    { name: "martes", enabled: false },
+    { name: "miércoles", enabled: false },
+    { name: "jueves", enabled: false },
+    { name: "viernes", enabled: false },
+    { name: "sábado", enabled: false },
+    { name: "domingo", enabled: false },
+  ];
 });
 
 export const GlobalContext = createContext();
@@ -50,16 +69,20 @@ export const GlobalProvider = ({ children }) => {
     defaultHoursTo: 0,
     defaultMinutesTo: 0,
   });
-  const [continueActivityMode, setContinueActivityMode] = useState({
-    continueActivityNextWeek: false,
-    continueActivityNextDay: false,
-  });
+  const [continueActivityMode, setContinueActivityMode] = useState(
+    storedContinueSettings
+  );
   const [schedule, setSchedule] = useState(storedSchedule);
-  const [getFlag, setGetFlag] = useState(false);
   const [editGroupFlag, setEditGroupFlag] = useState(false);
   const [editActivityFlag, setEditActivityFlag] = useState(false);
   const [editGroupIndex, setEditGroupIndex] = useState();
   const [editActivityIndex, setEditActivityIndex] = useState();
+  const [scheduleName, setScheduleName] = useState("");
+
+  const formatTime = (time) => {
+    time = time < 10 ? "0" + time.toString() : time.toString();
+    return time;
+  };
 
   const editGroup = (name, index) => {
     setEditGroupFlag(true);
@@ -165,6 +188,21 @@ export const GlobalProvider = ({ children }) => {
         }
         break;
 
+      case "saveSchedule":
+        if (scheduleName === "") {
+          showError("Ingrese un nombre para guardar los horarios.", input);
+        }
+        // else if (
+        //   groups.find((g, index) => g === group && index !== editGroupIndex)
+        // ) {
+        //   showError("El grupo ya existe.", input);
+        // }
+        else {
+          postSchedule();
+        }
+
+        break;
+
       case "activity":
       case "editActivity":
         if (activity.name === "") {
@@ -186,7 +224,11 @@ export const GlobalProvider = ({ children }) => {
         break;
 
       case "days":
-        if (!days.filter((d) => d.name !== undefined).length) {
+        if (!groups.length) {
+          showError("No se han ingresado grupos.", input);
+        } else if (!activities.length) {
+          showError("No se han ingresado actividades.", input);
+        } else if (!days.filter((d) => d.name !== undefined).length) {
           showError("No se han seleccionado días.", input);
         } else {
           createSchedule();
@@ -204,6 +246,11 @@ export const GlobalProvider = ({ children }) => {
         [name]: value,
       };
     });
+  };
+
+  const handleScheduleName = (e) => {
+    const { value } = e.target;
+    setScheduleName(value);
   };
 
   const handleDefaultActivitySettings = (e) => {
@@ -254,8 +301,12 @@ export const GlobalProvider = ({ children }) => {
       localStorage.setItem("lastDays", JSON.stringify(days));
       localStorage.setItem("lastGroups", JSON.stringify(groups));
       localStorage.setItem("lastActivities", JSON.stringify(activities));
+      localStorage.setItem(
+        "StoredContinueSettings",
+        JSON.stringify(continueActivityMode)
+      );
     }
-  }, [schedule, days, groups, activities, isLoggedIn]);
+  }, [schedule, days, groups, activities, isLoggedIn, continueActivityMode]);
 
   //cuando te logeás, se guarda el token en local storage. Cuando cerrás sesión se borra el token y demás variables de local storage
   useEffect(() => {
@@ -267,6 +318,7 @@ export const GlobalProvider = ({ children }) => {
       localStorage.removeItem("lastGroups");
       localStorage.removeItem("lastActivities");
       localStorage.removeItem("lastDays");
+      localStorage.removeItem("StoredContinueSettings");
     }
   }, [isLoggedIn]);
 
@@ -325,7 +377,19 @@ export const GlobalProvider = ({ children }) => {
     setSchedule([]);
     setActivities([]);
     setGroups([]);
-    setDays([]);
+    setDays([
+      { name: "lunes", enabled: false },
+      { name: "martes", enabled: false },
+      { name: "miércoles", enabled: false },
+      { name: "jueves", enabled: false },
+      { name: "viernes", enabled: false },
+      { name: "sábado", enabled: false },
+      { name: "domingo", enabled: false },
+    ]);
+    setContinueActivityMode({
+      continueActivityNextWeek: false,
+      continueActivityNextDay: false,
+    });
     navigate("/");
   };
 
@@ -390,29 +454,24 @@ export const GlobalProvider = ({ children }) => {
     });
     setErrorFlag(false);
   };
-  console.log(activities);
+
   const addDay = (e, index) => {
     // e.preventDefault();
-    let { name, value } = e.target;
-    if (name !== "name") {
+    let { name, value, checked, type } = e.target;
+    if (name !== "enabled") {
       value = parseInt(value);
     }
     setDays((prevDays) => {
-      //se busca si hay un objeto guardado con el mismo índice del nuevo valor
-      if (prevDays.find((d) => d.index === index)) {
-        //si hay algún objeto guardado con el mismo índice que el nuevo valor, se guarda el valor en ese mismo objeto
-        const prev = prevDays.map((d) => {
-          if (d.index === index) {
-            return { ...d, [name]: value };
-          } else {
-            return d;
-          }
-        });
+      //si hay algún objeto guardado con el mismo índice que el nuevo valor, se guarda el valor en ese mismo objeto
+      const prev = prevDays.map((d, i) => {
+        if (i === index) {
+          return { ...d, [name]: type === "checkbox" ? checked : value };
+        } else {
+          return d;
+        }
+      });
 
-        return [...prev];
-      } else {
-        return [...prevDays, { [name]: value, index }];
-      }
+      return [...prev];
     });
   };
 
@@ -420,7 +479,7 @@ export const GlobalProvider = ({ children }) => {
     const chosen = days
       //se sacan los objetos que no tengan día
       .filter((d) => {
-        return d.name !== undefined;
+        return d.enabled;
       })
       //se llenan los campos faltantes con el default
       .map((d) => {
@@ -846,13 +905,28 @@ export const GlobalProvider = ({ children }) => {
       activities,
       schedule,
       groups,
+      scheduleName,
     };
-    axios.post("post-schedule", newSchedule).then(() => {
-      setTimeout(() => {
-        setGetFlag(!getFlag);
-      }, 3000);
+    axios.post("post-schedule", newSchedule).then((res) => {
+      console.log(res.data);
     });
     setSchedule([]);
+    setActivities([]);
+    setDays([
+      { name: "lunes", enabled: false },
+      { name: "martes", enabled: false },
+      { name: "miércoles", enabled: false },
+      { name: "jueves", enabled: false },
+      { name: "viernes", enabled: false },
+      { name: "sábado", enabled: false },
+      { name: "domingo", enabled: false },
+    ]);
+    setGroups([]);
+    setScheduleName("");
+    setContinueActivityMode({
+      continueActivityNextWeek: false,
+      continueActivityNextDay: false,
+    });
   };
 
   const createSchedule = () => {
@@ -860,6 +934,7 @@ export const GlobalProvider = ({ children }) => {
     //msg en caso de que no entren todas las actividades
     let msg =
       "Se necesita más tiempo en la semana para las siguientes actividades: ";
+    const chosenDays = getChosenDays();
 
     groups.map((g) => {
       console.log(
@@ -867,9 +942,8 @@ export const GlobalProvider = ({ children }) => {
       );
       //se usa una copia en vez de activities para modificarlo y que vuelva a tener el estado original al principio de cada iteración
       let activitiesCopy = [...activities];
-      const chosenDays = getChosenDays();
 
-      const days = chosenDays.map((d) => {
+      const groupDays = chosenDays.map((d) => {
         //se van a guardar en act las actividades del día dentro del map de activitiesCopy para checkear si se superponen las actividades en cada iteración
         let act = [];
 
@@ -1007,7 +1081,7 @@ export const GlobalProvider = ({ children }) => {
       }
 
       //se guarda el grupo con sus días con las actividades asignadas
-      sche = [...sche, { name: g, days }];
+      sche = [...sche, { name: g, days: groupDays }];
       console.log("sche", sche);
     });
     //si se agregaron actividades al mensaje:
@@ -1022,22 +1096,10 @@ export const GlobalProvider = ({ children }) => {
     sche.map((g) =>
       g.days.map((day) =>
         day.dayActivities.map((da) => {
-          da.hoursFrom =
-            da.hoursFrom < 10
-              ? "0" + da.hoursFrom.toString()
-              : da.hoursFrom.toString();
-          da.minutesFrom =
-            da.minutesFrom < 10
-              ? "0" + da.minutesFrom.toString()
-              : da.minutesFrom.toString();
-          da.hoursTo =
-            da.hoursTo < 10
-              ? "0" + da.hoursTo.toString()
-              : da.hoursTo.toString();
-          da.minutesTo =
-            da.minutesTo < 10
-              ? "0" + da.minutesTo.toString()
-              : da.minutesTo.toString();
+          da.hoursFrom = formatTime(da.hoursFrom);
+          da.minutesFrom = formatTime(da.minutesFrom);
+          da.hoursTo = formatTime(da.hoursTo);
+          da.minutesTo = formatTime(da.minutesTo);
           return da;
         })
       )
@@ -1079,7 +1141,6 @@ export const GlobalProvider = ({ children }) => {
         checkInput,
         handleContinueActivityMode,
         continueActivityMode,
-        getFlag,
         schedule,
         editGroup,
         deleteGroup,
@@ -1088,6 +1149,9 @@ export const GlobalProvider = ({ children }) => {
         editGroupFlag,
         editActivityFlag,
         postSchedule,
+        handleScheduleName,
+        scheduleName,
+        formatTime,
       }}
     >
       {children}
