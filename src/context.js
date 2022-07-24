@@ -391,7 +391,7 @@ export const GlobalProvider = ({ children }) => {
           showError("No se han ingresado grupos.", input);
         } else if (!activities.length) {
           showError("No se han ingresado actividades.", input);
-        } else if (!days.filter((d) => d.name !== undefined).length) {
+        } else if (!days.filter((d) => d.enabled).length) {
           showError("No se han seleccionado días.", input);
         } else {
           createSchedule();

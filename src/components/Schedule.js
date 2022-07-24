@@ -18,7 +18,7 @@ const Schedule = () => {
         <div className="p-3 text-center">
           {schedule.map((g, index) => (
             <div key={index} className="p-3 text-capitalize">
-              <h4 className="text-center">{g.name}</h4>
+              <h4 className="text-center text-break">{g.name}</h4>
               <table className="table">
                 <thead>
                   <tr>

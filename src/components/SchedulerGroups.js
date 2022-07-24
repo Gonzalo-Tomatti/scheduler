@@ -55,7 +55,7 @@ const SchedulerGroups = () => {
           </small>
         </div>
       </form>
-      <ul>
+      <ul className="text-break">
         {groups.map((g, index) => (
           <li key={index} className="d-flex li">
             {g}
