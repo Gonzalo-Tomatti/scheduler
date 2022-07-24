@@ -48,6 +48,7 @@ h5 {
 
 .sectionNoNav {
   min-height: 100vh;
+  background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
 }
 
 .wrapper {
@@ -185,10 +186,6 @@ tbody {
 
 .table-container {
   min-width: 80vw;
-}
-
-.sectionNoNav {
-  background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
 }
 
 /* MODAL */
