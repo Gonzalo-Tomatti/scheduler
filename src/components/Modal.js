@@ -1,5 +1,4 @@
 import React from "react";
-import { FaTimes } from "react-icons/fa";
 
 const Modal = ({
   isModalOpen,
@@ -11,9 +10,7 @@ const Modal = ({
 }) => {
   return (
     <div className={`${isModalOpen && "show-modal"} modal-overlay`}>
-      <form className="d-flex flex-column align-items-center justify-content-center bg-dark p-3 edit-form">
-        <FaTimes className="modal-btn" onClick={toggleModal} />
-
+      <form className="d-flex flex-column align-items-center justify-content-center bg-dark p-md-5 edit-form">
         <div className="form-group m-2 d-flex flex-column">
           <label className="my-2" htmlFor="newName">
             Ingrese el nuevo nombre del horario

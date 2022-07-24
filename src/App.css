@@ -129,7 +129,6 @@ input::-webkit-inner-spin-button {
 
 .edit-trash {
   cursor: pointer;
-  color: rgb(235, 235, 235);
 }
 
 .act-name {
@@ -172,6 +171,7 @@ tbody {
 }
 
 /* MY SCHEDULES */
+
 .schedule-li {
   min-width: 15rem;
   cursor: pointer;
@@ -221,17 +221,37 @@ tbody {
 
 .edit-form {
   position: relative;
-  width: 70vw;
-  height: 70vh;
-  border-radius: 2rem;
+  border-radius: 1rem;
+  width: 95vw;
+  height: 40vh;
 }
 
 @media screen and (min-width: 576px) {
-  .list-group-item {
+  /* .list-group-item {
     position: relative;
   }
   .edit-trash-container {
     position: absolute;
     transform: translate(400%, -100%);
+  } */
+
+  .edit-form {
+    width: 70vw;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .edit-form {
+    width: 50vw;
+  }
+}
+@media screen and (min-width: 992px) {
+  .edit-form {
+    width: 40vw;
+  }
+}
+@media screen and (min-width: 1200px) {
+  .edit-form {
+    width: 30vw;
   }
 }

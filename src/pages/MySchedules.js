@@ -20,7 +20,10 @@ const MySchedules = () => {
 
   const fetchSchedules = () => {
     axios
-      .all([axios.get(`get-demos`), axios.get(`get-schedules`)])
+      .all([
+        axios.get(`https://big-scheduler.herokuapp.com/get-demos`),
+        axios.get(`https://big-scheduler.herokuapp.com/get-schedules`),
+      ])
       .then(
         axios.spread((demos, scheds) => {
           setSchedules([...demos.data, ...scheds.data]);
@@ -63,12 +66,13 @@ const MySchedules = () => {
 
   //editar nombre de horario
 
-  const saveId = (id) => {
+  const saveId = (id, e) => {
     setScheduleId(id);
-    toggleModal();
+    toggleModal(e);
   };
   // abrir/cerrar modal
-  const toggleModal = async () => {
+  const toggleModal = async (e) => {
+    e.preventDefault();
     await setIsModalOpen(!isModalOpen);
     refInput.current.focus();
   };
@@ -108,7 +112,7 @@ const MySchedules = () => {
         editScheduleName={editScheduleName}
       />
 
-      <div className="section d-flex flex-column align-items-center">
+      <div className="section d-flex flex-column align-items-center ">
         <h3 className="mt-5">Horarios guardados:</h3>
         <ul className="list-group py-5">
           {schedules.map((s, index) => (
@@ -116,7 +120,7 @@ const MySchedules = () => {
               onClick={() => showSchedule(index)}
               className={`${
                 index === showingScheduleIndex && "list-group-item-primary"
-              } list-group-item schedule-li px-5 text-center d-flex justify-content-between d-md-inline`}
+              } list-group-item schedule-li px-3 text-center  d-inline text-break`}
               key={index}
             >
               <p className="p">{s.scheduleName}</p>
@@ -124,7 +128,7 @@ const MySchedules = () => {
                 <div className="edit-trash-container">
                   <FaRegEdit
                     className="mx-2 edit-trash"
-                    onClick={() => saveId(s._id)}
+                    onClick={(e) => saveId(s._id, e)}
                   />
                   <FaTrashAlt
                     className="mx-2 edit-trash"
