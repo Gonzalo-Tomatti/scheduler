@@ -25,8 +25,8 @@ const Schedule = () => {
                     <th className="col-3">Día</th>
                     <div className="col-12">
                       <div className="row">
-                        <th className="col-6">Actividad</th>
-                        <th className="col-6">Hora</th>
+                        <th className="col-6 col-lg-8">Actividad</th>
+                        <th className="col-6 col-lg-4">Hora</th>
                       </div>
                     </div>
                   </tr>
@@ -41,15 +41,17 @@ const Schedule = () => {
                       <td className="text-break li ">
                         {d.dayActivities.map((da, index) => (
                           <div key={index} className="row ">
-                            <div className="my-1 col-6">{da.name}</div>
-                            <div className="my-1 col-6">
+                            <div className="my-1 col-6 col-lg-8">{da.name}</div>
+                            <div className="my-1 col-6 col-lg-4">
                               {da.hoursFrom}:{da.minutesFrom} - {da.hoursTo}:
                               {da.minutesTo}
                             </div>
 
                             <hr
                               className={
-                                index === d.dayActivities.length - 1 && "d-none"
+                                index === d.dayActivities.length - 1
+                                  ? "d-none"
+                                  : ""
                               }
                             ></hr>
                           </div>

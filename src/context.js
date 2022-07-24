@@ -9,9 +9,29 @@ let storedToken,
   storedActivities,
   storedDays,
   storedGroups,
-  storedContinueSettings;
+  storedContinueSettings,
+  storedTimeBetween,
+  storedDefaultSettings;
 window.addEventListener("DOMContentLoaded", () => {
   storedToken = JSON.parse(localStorage.getItem("schedulerToken")) || "";
+  storedDefaultSettings = JSON.parse(
+    localStorage.getItem("storedDefaultSettings")
+  ) || {
+    defaultActivity: {
+      hours: 0,
+      minutes: 0,
+    },
+    defaultDays: {
+      defaultHoursFrom: 0,
+      defaultMinutesFrom: 0,
+      defaultHoursTo: 0,
+      defaultMinutesTo: 0,
+    },
+  };
+  storedTimeBetween = JSON.parse(localStorage.getItem("storedTimeBetween")) || {
+    hours: 0,
+    minutes: 0,
+  };
   storedSchedule = JSON.parse(localStorage.getItem("lastSchedule")) || [];
   storedActivities = JSON.parse(localStorage.getItem("lastActivities")) || [];
   storedContinueSettings = JSON.parse(
@@ -22,13 +42,62 @@ window.addEventListener("DOMContentLoaded", () => {
   };
   storedGroups = JSON.parse(localStorage.getItem("lastGroups")) || [];
   storedDays = JSON.parse(localStorage.getItem("lastDays")) || [
-    { name: "lunes", enabled: false },
-    { name: "martes", enabled: false },
-    { name: "miércoles", enabled: false },
-    { name: "jueves", enabled: false },
-    { name: "viernes", enabled: false },
-    { name: "sábado", enabled: false },
-    { name: "domingo", enabled: false },
+    {
+      name: "lunes",
+      enabled: false,
+      hoursTo: 0,
+      hoursFrom: 0,
+      minutesTo: 0,
+      minutesFrom: 0,
+    },
+    {
+      name: "martes",
+      enabled: false,
+      hoursTo: 0,
+      hoursFrom: 0,
+      minutesTo: 0,
+      minutesFrom: 0,
+    },
+    {
+      name: "miércoles",
+      enabled: false,
+      hoursTo: 0,
+      hoursFrom: 0,
+      minutesTo: 0,
+      minutesFrom: 0,
+    },
+    {
+      name: "jueves",
+      enabled: false,
+      hoursTo: 0,
+      hoursFrom: 0,
+      minutesTo: 0,
+      minutesFrom: 0,
+    },
+    {
+      name: "viernes",
+      enabled: false,
+      hoursTo: 0,
+      hoursFrom: 0,
+      minutesTo: 0,
+      minutesFrom: 0,
+    },
+    {
+      name: "sábado",
+      enabled: false,
+      hoursTo: 0,
+      hoursFrom: 0,
+      minutesTo: 0,
+      minutesFrom: 0,
+    },
+    {
+      name: "domingo",
+      enabled: false,
+      hoursTo: 0,
+      hoursFrom: 0,
+      minutesTo: 0,
+      minutesFrom: 0,
+    },
   ];
 });
 
@@ -59,16 +128,12 @@ export const GlobalProvider = ({ children }) => {
     hours: 0,
     minutes: 0,
   });
-  const [defaultActivitySettings, setDefaultActivitySettings] = useState({
-    hours: 0,
-    minutes: 0,
-  });
-  const [defaultTime, setDefaultTime] = useState({
-    defaultHoursFrom: 0,
-    defaultMinutesFrom: 0,
-    defaultHoursTo: 0,
-    defaultMinutesTo: 0,
-  });
+  const [defaultActivitySettings, setDefaultActivitySettings] = useState(
+    storedDefaultSettings.defaultActivity
+  );
+  const [defaultTime, setDefaultTime] = useState(
+    storedDefaultSettings.defaultDays
+  );
   const [continueActivityMode, setContinueActivityMode] = useState(
     storedContinueSettings
   );
@@ -78,6 +143,104 @@ export const GlobalProvider = ({ children }) => {
   const [editGroupIndex, setEditGroupIndex] = useState();
   const [editActivityIndex, setEditActivityIndex] = useState();
   const [scheduleName, setScheduleName] = useState("");
+  const [timeBetween, setTimeBetween] = useState(storedTimeBetween);
+
+  const clearFields = () => {
+    setSchedule([]);
+    setActivities([]);
+    setDays([
+      {
+        name: "lunes",
+        enabled: false,
+        hoursTo: 0,
+        hoursFrom: 0,
+        minutesTo: 0,
+        minutesFrom: 0,
+      },
+      {
+        name: "martes",
+        enabled: false,
+        hoursTo: 0,
+        hoursFrom: 0,
+        minutesTo: 0,
+        minutesFrom: 0,
+      },
+      {
+        name: "miércoles",
+        enabled: false,
+        hoursTo: 0,
+        hoursFrom: 0,
+        minutesTo: 0,
+        minutesFrom: 0,
+      },
+      {
+        name: "jueves",
+        enabled: false,
+        hoursTo: 0,
+        hoursFrom: 0,
+        minutesTo: 0,
+        minutesFrom: 0,
+      },
+      {
+        name: "viernes",
+        enabled: false,
+        hoursTo: 0,
+        hoursFrom: 0,
+        minutesTo: 0,
+        minutesFrom: 0,
+      },
+      {
+        name: "sábado",
+        enabled: false,
+        hoursTo: 0,
+        hoursFrom: 0,
+        minutesTo: 0,
+        minutesFrom: 0,
+      },
+      {
+        name: "domingo",
+        enabled: false,
+        hoursTo: 0,
+        hoursFrom: 0,
+        minutesTo: 0,
+        minutesFrom: 0,
+      },
+    ]);
+    setGroups([]);
+    setTimeBetween({ hours: 0, minutes: 0 });
+    setDefaultActivitySettings({
+      hours: 0,
+      minutes: 0,
+    });
+    setDefaultTime({
+      defaultHoursFrom: 0,
+      defaultMinutesFrom: 0,
+      defaultHoursTo: 0,
+      defaultMinutesTo: 0,
+    });
+    setScheduleName("");
+    setContinueActivityMode({
+      continueActivityNextWeek: false,
+      continueActivityNextDay: false,
+    });
+  };
+
+  const handleTimeBetween = (e) => {
+    let { value, name } = e.target;
+    if (value === "") {
+      value = 0;
+    }
+    value = parseInt(value);
+    if (name === "minutes" && value > 59) {
+      value = 59;
+    }
+    setTimeBetween((prev) => {
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
+  };
 
   const formatTime = (time) => {
     time = time < 10 ? "0" + time.toString() : time.toString();
@@ -278,7 +441,9 @@ export const GlobalProvider = ({ children }) => {
   };
 
   const handleDefaultTimeSettings = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    value = parseInt(value);
+
     setDefaultTime((prevDefaultTime) => {
       return {
         ...prevDefaultTime,
@@ -302,11 +467,29 @@ export const GlobalProvider = ({ children }) => {
       localStorage.setItem("lastGroups", JSON.stringify(groups));
       localStorage.setItem("lastActivities", JSON.stringify(activities));
       localStorage.setItem(
+        "storedDefaultSettings",
+        JSON.stringify({
+          defaultActivity: defaultActivitySettings,
+          defaultDays: defaultTime,
+        })
+      );
+      localStorage.setItem("storedTimeBetween", JSON.stringify(timeBetween));
+      localStorage.setItem(
         "StoredContinueSettings",
         JSON.stringify(continueActivityMode)
       );
     }
-  }, [schedule, days, groups, activities, isLoggedIn, continueActivityMode]);
+  }, [
+    schedule,
+    days,
+    groups,
+    activities,
+    isLoggedIn,
+    continueActivityMode,
+    timeBetween,
+    defaultActivitySettings,
+    defaultTime,
+  ]);
 
   //cuando te logeás, se guarda el token en local storage. Cuando cerrás sesión se borra el token y demás variables de local storage
   useEffect(() => {
@@ -319,6 +502,8 @@ export const GlobalProvider = ({ children }) => {
       localStorage.removeItem("lastActivities");
       localStorage.removeItem("lastDays");
       localStorage.removeItem("StoredContinueSettings");
+      localStorage.removeItem("storedTimeBetween");
+      localStorage.removeItem("storedDefaultSettings");
     }
   }, [isLoggedIn]);
 
@@ -336,16 +521,18 @@ export const GlobalProvider = ({ children }) => {
     } else if (user.password !== user.repeatPassword) {
       showError("Las contraseñas no coinciden.", "login");
     } else {
-      axios.post("signup", user).then((res) => {
-        if (res.data.msg === "email in use") {
-          showError("El email ingresado se encuentra en uso.", "login");
-        } else {
-          setToken(res.data.token);
-          setIsLoggedIn(true);
-          toggleSignupFlag();
-          navigate("/scheduler");
-        }
-      });
+      axios
+        .post("https://big-scheduler.herokuapp.com/signup", user)
+        .then((res) => {
+          if (res.data.msg === "email in use") {
+            showError("El email ingresado se encuentra en uso.", "login");
+          } else {
+            setToken(res.data.token);
+            setIsLoggedIn(true);
+            toggleSignupFlag();
+            navigate("/scheduler");
+          }
+        });
     }
   };
 
@@ -354,15 +541,17 @@ export const GlobalProvider = ({ children }) => {
     if (user.email === "" || user.password === "") {
       showError("Por favor completar todos los campos.", "login");
     } else {
-      axios.post(`login`, user).then((res) => {
-        if (res.data.msg === "user not found") {
-          showError("El usuario no existe.", "login");
-        } else {
-          setToken(res.data.token);
-          setIsLoggedIn(true);
-          navigate("/scheduler");
-        }
-      });
+      axios
+        .post(`https://big-scheduler.herokuapp.com/login`, user)
+        .then((res) => {
+          if (res.data.msg === "user not found") {
+            showError("Usuario o contraseña incorrectos.", "login");
+          } else {
+            setToken(res.data.token);
+            setIsLoggedIn(true);
+            navigate("/scheduler");
+          }
+        });
     }
   };
 
@@ -374,22 +563,7 @@ export const GlobalProvider = ({ children }) => {
       email: "",
       repeatPassword: "",
     });
-    setSchedule([]);
-    setActivities([]);
-    setGroups([]);
-    setDays([
-      { name: "lunes", enabled: false },
-      { name: "martes", enabled: false },
-      { name: "miércoles", enabled: false },
-      { name: "jueves", enabled: false },
-      { name: "viernes", enabled: false },
-      { name: "sábado", enabled: false },
-      { name: "domingo", enabled: false },
-    ]);
-    setContinueActivityMode({
-      continueActivityNextWeek: false,
-      continueActivityNextDay: false,
-    });
+    clearFields();
     navigate("/");
   };
 
@@ -699,9 +873,33 @@ export const GlobalProvider = ({ children }) => {
 
     if (act.length > 0) {
       act.forEach((ac) => {
+        //poner el intervalo de tiempo entre actividades antes y después de cada actividad ya asignada
+        const acWithIntervals = {};
+
+        acWithIntervals.minutesTo = ac.minutesTo + timeBetween.minutes;
+        let extraHours = 0;
+        if (acWithIntervals.minutesTo > 59) {
+          extraHours = Math.trunc(acWithIntervals.minutesTo / 60);
+          acWithIntervals.minutesTo = acWithIntervals.minutesTo % 60;
+        }
+        acWithIntervals.hoursTo = ac.hoursTo + extraHours + timeBetween.hours;
+
+        acWithIntervals.minutesFrom = ac.minutesFrom - timeBetween.minutes;
+        let minusHours = 0;
+        if (acWithIntervals.minutesFrom < 0) {
+          minusHours = 1;
+          acWithIntervals.minutesFrom = 60 + acWithIntervals.minutesFrom;
+        }
+        acWithIntervals.hoursFrom =
+          ac.hoursFrom - minusHours - timeBetween.hours;
+
+        console.log(acWithIntervals, "with inter");
         console.log("pasa por ", ac);
         //ver si las horas de la nueva actividad se superponen con una actividad ya asignada
-        if (ac.hoursTo > hoursFrom && hoursTo > ac.hoursFrom) {
+        if (
+          acWithIntervals.hoursTo > hoursFrom &&
+          hoursTo > acWithIntervals.hoursFrom
+        ) {
           console.log("cambia horas");
           //se superponen. Cambiar el horario de inicio de la nueva actividad a la hora en la que termina la actividad con la que se superpone
           [hoursFrom, minutesFrom, hoursTo, minutesTo] = changeActivityTime(
@@ -709,7 +907,7 @@ export const GlobalProvider = ({ children }) => {
             minutesFrom,
             hoursTo,
             minutesTo,
-            ac,
+            acWithIntervals,
             a
           );
 
@@ -742,8 +940,14 @@ export const GlobalProvider = ({ children }) => {
           }
         }
         //si termina a la misma hora que empieza otra actividad o empieza a la misma hora que termina otra actividad ver si los minutos se superponen
-        else if (ac.hoursTo - hoursFrom === 0 || hoursTo - ac.hoursFrom === 0) {
-          if (ac.minutesTo > minutesFrom && minutesTo > ac.minutesFrom) {
+        else if (
+          acWithIntervals.hoursTo - hoursFrom === 0 ||
+          hoursTo - acWithIntervals.hoursFrom === 0
+        ) {
+          if (
+            acWithIntervals.minutesTo > minutesFrom &&
+            minutesTo > acWithIntervals.minutesFrom
+          ) {
             console.log("cambia minutoss");
 
             //se superponen.
@@ -752,7 +956,7 @@ export const GlobalProvider = ({ children }) => {
               minutesFrom,
               hoursTo,
               minutesTo,
-              ac,
+              acWithIntervals,
               a
             );
 
@@ -785,12 +989,12 @@ export const GlobalProvider = ({ children }) => {
             }
           }
           if (
-            (ac.hoursTo > hoursFrom &&
-              ac.minutesTo <= minutesFrom &&
-              minutesTo > ac.minutesFrom) ||
-            (hoursTo > ac.hoursFrom &&
-              minutesTo <= ac.minutesFrom &&
-              ac.minutesTo > minutesFrom)
+            (acWithIntervals.hoursTo > hoursFrom &&
+              acWithIntervals.minutesTo <= minutesFrom &&
+              minutesTo > acWithIntervals.minutesFrom) ||
+            (hoursTo > acWithIntervals.hoursFrom &&
+              minutesTo <= acWithIntervals.minutesFrom &&
+              acWithIntervals.minutesTo > minutesFrom)
           ) {
             console.log("segundo if");
             //se superponen.
@@ -799,7 +1003,7 @@ export const GlobalProvider = ({ children }) => {
               minutesFrom,
               hoursTo,
               minutesTo,
-              ac,
+              acWithIntervals,
               a
             );
             console.log(
@@ -907,26 +1111,12 @@ export const GlobalProvider = ({ children }) => {
       groups,
       scheduleName,
     };
-    axios.post("post-schedule", newSchedule).then((res) => {
-      console.log(res.data);
-    });
-    setSchedule([]);
-    setActivities([]);
-    setDays([
-      { name: "lunes", enabled: false },
-      { name: "martes", enabled: false },
-      { name: "miércoles", enabled: false },
-      { name: "jueves", enabled: false },
-      { name: "viernes", enabled: false },
-      { name: "sábado", enabled: false },
-      { name: "domingo", enabled: false },
-    ]);
-    setGroups([]);
-    setScheduleName("");
-    setContinueActivityMode({
-      continueActivityNextWeek: false,
-      continueActivityNextDay: false,
-    });
+    axios
+      .post("https://big-scheduler.herokuapp.com/post-schedule", newSchedule)
+      .then((res) => {
+        console.log(res.data);
+      });
+    clearFields();
   };
 
   const createSchedule = () => {
@@ -1087,6 +1277,7 @@ export const GlobalProvider = ({ children }) => {
     //si se agregaron actividades al mensaje:
     if (msg.length > 69) {
       showError(msg, "remainingActivities");
+      sche = [];
     } else {
       setErrorFlag(false);
       setErrorType("");
@@ -1134,6 +1325,7 @@ export const GlobalProvider = ({ children }) => {
         handleDefaultTimeSettings,
         handleDefaultActivitySettings,
         defaultActivitySettings,
+        defaultTime,
         createSchedule,
         errorFlag,
         errorMsg,
@@ -1152,6 +1344,8 @@ export const GlobalProvider = ({ children }) => {
         handleScheduleName,
         scheduleName,
         formatTime,
+        timeBetween,
+        handleTimeBetween,
       }}
     >
       {children}

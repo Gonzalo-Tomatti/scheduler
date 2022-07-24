@@ -26,7 +26,7 @@ const Navbar = () => {
             </li>
             <li className="nav-item">
               <NavLink className={"navlink"} to="/horarios">
-                Mis Horarios
+                Mis horarios
               </NavLink>
             </li>
             <li onClick={logOut} className="nav-item navlink">

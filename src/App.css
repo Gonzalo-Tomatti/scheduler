@@ -129,6 +129,7 @@ input::-webkit-inner-spin-button {
 
 .edit-trash {
   cursor: pointer;
+  color: rgb(235, 235, 235);
 }
 
 .act-name {
@@ -184,4 +185,53 @@ tbody {
 
 .table-container {
   min-width: 80vw;
+}
+
+.sectionNoNav {
+  background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+  z-index: -1;
+}
+
+.show-modal {
+  visibility: visible; /* abrir y cerrar modal */
+  z-index: 1;
+}
+
+.modal-btn {
+  position: absolute;
+  top: 1rem;
+  right: 2rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: white;
+}
+
+.edit-form {
+  position: relative;
+  width: 70vw;
+  height: 70vh;
+  border-radius: 2rem;
+}
+
+@media screen and (min-width: 576px) {
+  .list-group-item {
+    position: relative;
+  }
+  .edit-trash-container {
+    position: absolute;
+    transform: translate(400%, -100%);
+  }
 }

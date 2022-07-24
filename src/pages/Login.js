@@ -15,8 +15,12 @@ const Login = () => {
   } = useContext(GlobalContext);
 
   return (
-    <div className="sectionNoNav d-flex justify-content-center">
-      <form className="d-flex flex-column align-items-center justify-content-center p-3 form">
+    <div className="sectionNoNav d-flex align-items-center flex-column justify-content-center">
+      <h1>Scheduler</h1>
+      <h3 className="text-center mb-5 px-3">
+        ¡Inicia sesión y empieza a planificar tus actividades!
+      </h3>
+      <form className="d-flex flex-column align-items-center  form">
         {signupFlag && (
           <div className="form-group m-2 d-flex flex-column">
             <label className="my-2" htmlFor="username">
