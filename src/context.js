@@ -2,7 +2,7 @@ import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-//https://big-scheduler.herokuapp.com/
+//https://scheduler-84ui.onrender.com/
 
 let storedToken,
   storedSchedule,
@@ -522,7 +522,7 @@ export const GlobalProvider = ({ children }) => {
       showError("Las contraseñas no coinciden.", "login");
     } else {
       axios
-        .post("https://big-scheduler.herokuapp.com/signup", user)
+        .post("https://scheduler-84ui.onrender.com/signup", user)
         .then((res) => {
           if (res.data.msg === "email in use") {
             showError("El email ingresado se encuentra en uso.", "login");
@@ -542,7 +542,7 @@ export const GlobalProvider = ({ children }) => {
       showError("Por favor completar todos los campos.", "login");
     } else {
       axios
-        .post(`https://big-scheduler.herokuapp.com/login`, user)
+        .post(`https://scheduler-84ui.onrender.com/login`, user)
         .then((res) => {
           if (res.data.msg === "user not found") {
             showError("Usuario o contraseña incorrectos.", "login");
@@ -1112,7 +1112,7 @@ export const GlobalProvider = ({ children }) => {
       scheduleName,
     };
     axios
-      .post("https://big-scheduler.herokuapp.com/post-schedule", newSchedule)
+      .post("https://scheduler-84ui.onrender.com/post-schedule", newSchedule)
       .then((res) => {
         console.log(res.data);
       });
