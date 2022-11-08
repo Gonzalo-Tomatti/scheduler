@@ -21,8 +21,8 @@ const MySchedules = () => {
   const fetchSchedules = () => {
     axios
       .all([
-        axios.get(`https://big-scheduler.herokuapp.com/get-demos`),
-        axios.get(`https://big-scheduler.herokuapp.com/get-schedules`),
+        axios.get(`https://scheduler-84ui.onrender.com/get-demos`),
+        axios.get(`https://scheduler-84ui.onrender.com/get-schedules`),
       ])
       .then(
         axios.spread((demos, scheds) => {
@@ -57,7 +57,7 @@ const MySchedules = () => {
   //borrar horario
   const deleteSchedule = (id) => {
     axios
-      .delete(`https://big-scheduler.herokuapp.com/delete-schedule/${id}`)
+      .delete(`https://scheduler-84ui.onrender.com/delete-schedule/${id}`)
       .then(() => {
         fetchSchedules();
       })
@@ -87,7 +87,7 @@ const MySchedules = () => {
 
     axios
       .patch(
-        `https://big-scheduler.herokuapp.com/edit-schedule-name/${scheduleId}`,
+        `https://scheduler-84ui.onrender.com/edit-schedule-name/${scheduleId}`,
         {
           newName,
         }
