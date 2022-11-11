@@ -21,8 +21,12 @@ const MySchedules = () => {
   const fetchSchedules = () => {
     axios
       .all([
-        axios.get(`https://scheduler-84ui.onrender.com/get-demos`),
-        axios.get(`https://scheduler-84ui.onrender.com/get-schedules`),
+        axios.get(
+          `https://backend-scheduler-production.up.railway.app/get-demos`
+        ),
+        axios.get(
+          `https://backend-scheduler-production.up.railway.app/get-schedules`
+        ),
       ])
       .then(
         axios.spread((demos, scheds) => {
@@ -57,7 +61,9 @@ const MySchedules = () => {
   //borrar horario
   const deleteSchedule = (id) => {
     axios
-      .delete(`https://scheduler-84ui.onrender.com/delete-schedule/${id}`)
+      .delete(
+        `https://backend-scheduler-production.up.railway.app/delete-schedule/${id}`
+      )
       .then(() => {
         fetchSchedules();
       })
@@ -87,7 +93,7 @@ const MySchedules = () => {
 
     axios
       .patch(
-        `https://scheduler-84ui.onrender.com/edit-schedule-name/${scheduleId}`,
+        `https://backend-scheduler-production.up.railway.app/edit-schedule-name/${scheduleId}`,
         {
           newName,
         }
